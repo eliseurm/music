@@ -1,0 +1,516 @@
+.file-explorer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+
+  .explorer-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+
+      i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  .accordion {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    .accordion-panel {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid var(--border-color);
+
+      /* Por padrão, os painéis não ocupam toda a altura */
+      flex: 0 0 auto;
+
+      &.active {
+        /* Somente o painel de seleção deve expandir para ocupar o espaço */
+        &.selection {
+          flex: 1 1 auto;
+          overflow: hidden;
+        }
+        /* O painel de arquivos mantém altura do conteúdo */
+        &.files {
+          flex: 0 0 auto;
+          overflow: visible;
+        }
+      }
+
+      .panel-header {
+        padding: 0.75rem 1rem;
+        background: var(--background-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: background 0.2s;
+
+        &:hover {
+          background: var(--hover-bg);
+        }
+
+        i {
+          width: 20px;
+          text-align: center;
+          color: var(--primary-color);
+        }
+      }
+
+      .panel-content {
+        background: var(--sidebar-bg);
+
+        /* Comportamento por painel */
+        /* Arquivos: altura do conteúdo, sem forçar scroll */
+        .files & {
+          flex: 0 0 auto;
+          overflow: visible;
+        }
+        /* Seleção: lista grande, permite scroll e ocupa espaço */
+        .selection & {
+          flex: 1 1 auto;
+          overflow-y: auto;
+        }
+      }
+    }
+  }
+
+  .explorer-actions {
+    padding: 1rem;
+    // flex: 1; // Removido para funcionar dentro do accordion
+    // overflow-y: auto; // Removido para funcionar dentro do accordion
+
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 2rem 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s;
+      background: white;
+
+      &:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-light);
+      }
+
+      i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+      }
+
+      p {
+        margin: 0.5rem 0;
+        color: var(--text-secondary);
+
+        &.small {
+          font-size: 0.875rem;
+        }
+
+        &.file-types {
+          font-size: 0.75rem;
+          color: var(--text-light);
+          margin-top: 1rem;
+        }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.5rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+          background: #3a5a85;
+        }
+
+        i {
+          font-size: 1rem;
+          margin: 0;
+          color: white;
+        }
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+    }
+
+    .drive-section {
+      .drive-buttons {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+
+        .drive-btn {
+          flex: 1;
+        }
+
+        .config-btn {
+          padding: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: var(--radius-sm);
+          color: var(--text-secondary);
+
+          &:hover {
+            color: var(--primary-color);
+            background: var(--primary-light);
+          }
+        }
+      }
+
+      .btn-outline {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: var(--primary-color);
+          background: var(--primary-light);
+        }
+
+        i {
+          color: #4285f4; /* Cor do Google Drive */
+        }
+      }
+
+      .drive-files {
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: white;
+
+        .drive-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.5rem 1rem;
+          background: var(--background-color);
+          border-bottom: 1px solid var(--border-color);
+
+          .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            white-space: nowrap;
+
+            span {
+              cursor: pointer;
+              &:hover:not(.active) {
+                color: var(--primary-color);
+                text-decoration: underline;
+              }
+              &.active {
+                font-weight: 600;
+                color: var(--text-primary);
+                cursor: default;
+              }
+            }
+
+            .separator {
+              font-size: 0.6rem;
+              margin: 0 0.25rem;
+              color: var(--text-light);
+            }
+          }
+
+          .btn-icon-sm {
+            padding: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            &:hover {
+              color: var(--primary-color);
+            }
+          }
+        }
+
+        .loading, .empty {
+          padding: 2rem;
+          text-align: center;
+          color: var(--text-secondary);
+
+          i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+          }
+        }
+
+        .file-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          max-height: 300px;
+          overflow-y: auto;
+
+          .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:hover {
+              background: var(--hover-bg);
+            }
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            i {
+              color: var(--text-secondary);
+              width: 20px;
+            }
+
+            .file-name {
+              flex: 1;
+              font-size: 0.875rem;
+              color: var(--text-primary);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .recent-files {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+
+    h4 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+  }
+
+  .selection-actions {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .selection-toolbar {
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background: white;
+    }
+
+    .empty-selection {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-light);
+
+      i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      p {
+        margin: 0.5rem 0;
+        &.small {
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .selection-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      overflow-y: auto;
+
+      .selection-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        cursor: pointer;
+        background: white;
+        transition: background 0.2s;
+
+        &:hover {
+          background: var(--hover-bg);
+        }
+
+        &.checked {
+          background: var(--primary-light);
+        }
+
+        .item-main {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          flex: 1;
+          min-width: 0;
+
+          input[type="checkbox"] {
+            width: 1.1rem;
+            height: 1.1rem;
+          }
+
+          .drag-handle {
+            color: var(--text-light);
+            cursor: grab;
+            font-size: 0.9rem;
+            padding: 0.25rem;
+
+            &:active {
+              cursor: grabbing;
+            }
+          }
+
+          .score-name {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+
+        .item-actions {
+          display: flex;
+          gap: 0.25rem;
+
+          .btn-icon-sm {
+            padding: 0.4rem;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+
+            &:hover {
+              color: var(--primary-color);
+              background: var(--primary-light);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Estilos do Modal
+  .account-info {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+
+    label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .user-display {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+
+      i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+      }
+
+      span {
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+
+    .info-text {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin: 0;
+    }
+  }
+
+  .default-folder-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+
+    i {
+      color: #ffca28; // Cor de pasta
+    }
+
+    span {
+      flex: 1;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-clear {
+      border: none;
+      background: none;
+      color: var(--text-light);
+      cursor: pointer;
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: var(--danger-color);
+      }
+    }
+  }
+}

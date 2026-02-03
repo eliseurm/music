@@ -1,0 +1,314 @@
+@use '../assets/styles/variables' as vars;
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--background-color);
+
+  .main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    background: var(--background-color);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      overflow-y: auto;
+      height: calc(100vh - 56px); // Ajusta para a altura aproximada da toolbar
+    }
+
+    .sidebar {
+      width: 300px;
+      min-width: 300px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      overflow: hidden;
+
+      &.hidden {
+        width: 0;
+        min-width: 0;
+        border-right: none;
+      }
+
+      @media (max-width: 768px) {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        flex: 0 0 auto;
+
+        &.hidden {
+          height: 0;
+          border-bottom: none;
+        }
+      }
+    }
+
+    .score-area {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      background: var(--score-bg);
+      display: flex;
+      justify-content: center;
+
+      @media (max-width: 768px) {
+        padding: 10px;
+        width: 100%;
+        overflow: visible;
+      }
+
+      .osmd-container {
+        width: 100%;
+        max-width: 900px;
+        min-height: 600px;
+        background: white;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        overflow: auto;
+        touch-action: pan-x pan-y;
+
+        @media (max-width: 768px) {
+          min-height: 400px;
+        }
+
+        svg {
+          max-width: 100%;
+          height: auto;
+        }
+      }
+    }
+  }
+}
+
+/* Responsividade para tablet 12" */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .app-container {
+    .main-content {
+      .sidebar {
+        width: 280px;
+      }
+
+      .score-area {
+        padding: 16px;
+
+        .osmd-container {
+          min-height: 800px;
+        }
+      }
+    }
+  }
+}
+
+/* Orientação paisagem */
+@media (orientation: landscape) and (max-height: 1024px) {
+  .app-container {
+    .main-content {
+      .score-area {
+        .osmd-container {
+          min-height: calc(100vh - 120px);
+        }
+      }
+    }
+  }
+}
+
+/* Orientação retrato */
+@media (orientation: portrait) and (max-width: 768px) {
+  .app-container {
+    .main-content {
+      .score-area {
+        .osmd-container {
+          min-height: 400px;
+        }
+      }
+    }
+  }
+}
+
+/* Mensagens de estado */
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 500px;
+  text-align: center;
+  padding: 2rem;
+
+  &.loading {
+    color: #1976d2;
+  }
+
+  &.error {
+    color: #d32f2f;
+  }
+
+  &.info {
+    color: var(--text-secondary);
+  }
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .btn-retry {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #3a5a85;
+    }
+  }
+}
+
+/* Desabilitar sidebar quando OSMD não estiver pronto */
+.sidebar:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// Adicionar no final do arquivo
+
+/* Sidebar hidden state - movido para dentro de sidebar */
+
+/* Estilos para as posições do trombone no SVG */
+.trombone-position {
+  font-family: Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 16px !important;
+  fill: #000000 !important;
+  text-anchor: middle !important;
+  user-select: none !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+}
+
+.trombone-position-accidental {
+  font-family: Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 12px !important;
+  fill: #000000 !important;
+  text-anchor: middle !important;
+  user-select: none !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+}
+
+.trombone-pos-bg {
+  fill: white !important;
+  fill-opacity: 0.9 !important;
+  stroke: #000000 !important;
+  stroke-width: 1px !important;
+  rx: 4px !important;
+  z-index: 999 !important;
+}
+
+/* Garantir que o container do OSMD tenha posição relativa */
+.osmd-container {
+  position: relative !important;
+}
+
+/* Sobrescrever qualquer estilo que possa estar escondendo as posições */
+svg .trombone-position,
+svg .trombone-position-accidental,
+svg .trombone-pos-bg {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+
+/* ---- Overrides para modo Tela Cheia e controles flutuantes ---- */
+.app-container.fullscreen {
+  background: #000;
+}
+
+.app-container .hidden {
+  display: none !important;
+}
+
+.app-container .main-content .score-area.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 0;
+  background: #000;
+}
+
+.app-container .main-content .score-area.fullscreen .osmd-container {
+  height: 100vh;
+  min-height: 100vh;
+  width: 100vw;
+  border-radius: 0;
+  box-shadow: none;
+  background: white; /* partitura visível no fundo branco */
+  margin: 0;
+  max-width: none;
+  overflow: auto; /* Garante scroll interno se a partitura for grande */
+}
+
+/* Controles flutuantes visíveis somente no fullscreen */
+.app-container .floating-controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 1100;
+}
+
+.app-container .floating-controls .float-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.app-container .floating-controls .float-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.app-container .floating-controls .float-btn i {
+  font-size: 16px;
+}

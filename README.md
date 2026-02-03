@@ -1,59 +1,74 @@
-# PartituraShow
+# 🎼 Visualizador de Partituras MuseScore/XML com Trombone Helper
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.2.
+Um projeto web interativo que carrega e exibe partituras a partir de arquivos MuseScore/XML (.mscx, .xml), com funcionalidades específicas para músicos de trombone.
 
-## Development server
+## ✨ Funcionalidades
 
-To start a local development server, run:
+### 📁 Carregamento de Arquivos
+- **Arquivos locais**: Selecione arquivos do seu computador
+- **Google Drive**: Acesse arquivos diretamente do seu Google Drive
+- Suporte para formatos: `.mscx`, `.xml` (MuseScore/XML)
+
+### 🎵 Visualização de Partitura
+- Exibição interativa da partitura usando **VexFlow**
+- Interface responsiva para desktop, tablet e celular
+- Zoom in/out para melhor visualização
+
+### 🎷 Ferramentas para Trombone
+- **Posições da vara**: Visualize as posições do trombone para cada nota
+- **Alternador de claves**: Mude entre clave de sol e clave de fá
+- **Dicionário de posições**: Referência rápida das posições do trombone
+
+### 🎼 Funcionalidades Musicais
+- **Transporte de tonalidade**: Alterne entre diferentes tonalidades
+
+## 🚀 Como Usar
+
+### 1. Carregar uma Partitura
+- **Do computador**: Clique em "Escolher Arquivo" e selecione um arquivo .mscx ou .xml
+- **Do Google Drive**: Clique em "Google Drive" e autorize o acesso aos seus arquivos
+
+### 2. Navegar pela Partitura
+- Use as setas para navegar entre as páginas
+- Ajuste o zoom com os botões "+" e "-"
+- Role para cima/baixo em dispositivos móveis
+
+### 3. Usar as Ferramentas do Trombone
+- Ative/desative a exibição das posições com o botão "Posições do Trombone"
+- Consulte o dicionário de posições para referência
+- Alterne entre claves conforme necessário
+
+## 🛠️ Tecnologias Utilizadas
+
+- **HTML5/CSS3/JavaScript** (Vanilla)
+- **[VexFlow](https://www.vexflow.com/)** - Renderização de partituras
+- **[Google APIs](https://developers.google.com/drive)** - Integração com Google Drive
+- **LocalStorage** - Salvar preferências do usuário
+
+## 📱 Compatibilidade
+
+- ✅ Desktop (Chrome, Firefox, Safari, Edge)
+- ✅ Tablets (iPad, Android)
+- ✅ Celulares (iPhone, Android)
+- ✅ Offline (para arquivos locais)
+
+## 🎯 Funcionalidades Específicas do Trombone
+
+### Posições da Vara
+- Visualização clara das 7 posições do trombone
+
+### Dicionário de Posições
+- Referência visual das notas em cada posição
+- Inclui notas fundamentais e harmônicos
+
+## 🔧 Configuração para Desenvolvimento
 
 ```bash
-ng serve
-```
+# Clone o repositório
+git clone [url-do-repositorio]
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+# Navegue até a pasta do projeto
+cd visualizador-partituras-trombone
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+# Abra o arquivo principal
+npm run start

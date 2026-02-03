@@ -3,41 +3,42 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --port 4200",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": "*.html",
-        "options": {
-          "parser": "angular"
-        }
-      }
-    ]
+    "watch": "ng build --watch",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e",
+    "deploy": "ng build && firebase deploy",
+    "convert:mscz": "node scripts/convert-mscz.js",
+    "clean": "rm -rf node_modules package-lock.json dist",
+    "reset": "npm run clean && npm install"
   },
   "private": true,
-  "packageManager": "npm@10.8.2",
   "dependencies": {
+    "@angular/animations": "^21.1.0",
     "@angular/common": "^21.1.0",
     "@angular/compiler": "^21.1.0",
     "@angular/core": "^21.1.0",
     "@angular/forms": "^21.1.0",
     "@angular/platform-browser": "^21.1.0",
     "@angular/router": "^21.1.0",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@primeng/themes": "^21.0.4",
+    "@types/jszip": "^3.4.0",
+    "jszip": "^3.10.1",
+    "ngx-cookie-service": "^21.1.0",
+    "opensheetmusicdisplay": "^1.9.5",
+    "primeicons": "^7.0.0",
+    "primeng": "^21.1.1",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zone.js": "~0.16.0"
   },
   "devDependencies": {
-    "@angular/build": "^21.1.2",
+    "@angular-devkit/build-angular": "^21.1.2",
     "@angular/cli": "^21.1.2",
     "@angular/compiler-cli": "^21.1.0",
-    "jsdom": "^27.1.0",
-    "typescript": "~5.9.2",
-    "vitest": "^4.0.8"
+    "typescript": "~5.9.2"
   }
 }

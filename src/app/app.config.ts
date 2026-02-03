@@ -1,11 +1,23 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
+    provideAnimationsAsync(),
+    providePrimeNG({
+      theme: {
+        preset: Aura, // Agora o compilador sabe quem é o Aura
+        options: {
+          darkModeSelector: false
+        }
+      }
+    }),
+    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes)
   ]
 };

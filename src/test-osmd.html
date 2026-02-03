@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="node_modules/opensheetmusicdisplay/build/opensheetmusicdisplay.min.js"></script>
+</head>
+<body>
+<div id="osmd-container" style="width: 800px; height: 600px; border: 1px solid #ccc;"></div>
+
+<script>
+  console.log('OpenSheetMusicDisplay disponível?', typeof OpenSheetMusicDisplay);
+  console.log('É uma função?', typeof OpenSheetMusicDisplay === 'function');
+
+  if (typeof OpenSheetMusicDisplay === 'function') {
+    const osmd = new OpenSheetMusicDisplay(document.getElementById('osmd-container'), {
+      backend: 'svg',
+      autoResize: true
+    });
+
+    console.log('OSMD criado:', osmd);
+
+    // Testar com XML simples
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <score-partwise version="3.1">
+        <part-list><score-part id="P1"><part-name>Trombone</part-name></score-part></part-list>
+        <part id="P1">
+          <measure number="1">
+            <attributes>
+              <divisions>1</divisions>
+              <key><fifths>0</fifths></key>
+              <time><beats>4</beats><beat-type>4</beat-type></time>
+              <clef><sign>F</sign><line>4</line></clef>
+            </attributes>
+            <note><pitch><step>C</step><octave>3</octave></pitch><duration>1</duration><type>quarter</type></note>
+          </measure>
+        </part>
+      </score-partwise>`;
+
+    osmd.load(xml).then(() => {
+      osmd.render();
+      console.log('Teste concluído com sucesso!');
+    }).catch(err => {
+      console.error('Erro no teste:', err);
+    });
+  }
+</script>
+</body>
+</html>

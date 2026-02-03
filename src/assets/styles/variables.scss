@@ -1,0 +1,114 @@
+// Cores
+$primary-color: #4a6fa5;
+$primary-light: #e3f2fd;
+$primary-dark: #1e3a5f;
+
+$secondary-color: #7e57c2;
+$secondary-light: #f3e5f5;
+$secondary-dark: #4527a0;
+
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$info-color: #2196f3;
+
+// Tons de cinza
+$background-color: #f5f7fa;
+$card-bg: #ffffff;
+$sidebar-bg: #f8f9fa;
+$toolbar-bg: #ffffff;
+$score-bg: #f0f2f5;
+
+$border-color: #e0e0e0;
+$border-light: #f0f0f0;
+$border-dark: #cccccc;
+
+$text-primary: #333333;
+$text-secondary: #666666;
+$text-light: #999999;
+$text-disabled: #b3b3b3;
+
+// Estados
+$hover-bg: #f5f5f5;
+$active-bg: #e8e8e8;
+$focus-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+
+// Scrollbar
+$scrollbar-track: #f1f1f1;
+$scrollbar-thumb: #c1c1c1;
+$scrollbar-thumb-hover: #a8a8a8;
+
+// Sombras
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+$shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+// Bordas
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// Tipografia
+$font-family-base: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+$font-family-mono: 'Cascadia Code', 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 1.875rem;  // 30px
+
+// Espaçamentos
+$spacing-xs: 0.25rem;  // 4px
+$spacing-sm: 0.5rem;   // 8px
+$spacing-md: 1rem;     // 16px
+$spacing-lg: 1.5rem;   // 24px
+$spacing-xl: 2rem;     // 32px
+$spacing-2xl: 3rem;    // 48px
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Transições
+$transition-fast: 0.15s ease;
+$transition-base: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// Z-index
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+
+// assets/styles/variables.scss - criar este arquivo primeiro
+// Variáveis SCSS
+$primary-color: #4a6fa5;
+$primary-light: #e3f2fd;
+$primary-dark: #1e3a5f;
+
+$secondary-color: #7e57c2;
+$secondary-light: #f3e5f5;
+$secondary-dark: #4527a0;
+
+$background-color: #f5f7fa;
+$sidebar-bg: #f8f9fa;
+$toolbar-bg: #ffffff;
+$score-bg: #f0f2f5;
+$border-color: #e0e0e0;
+$text-primary: #333333;
+$text-secondary: #666666;
+$hover-bg: #f5f5f5;
+$scrollbar-track: #f1f1f1;
+$scrollbar-thumb: #c1c1c1;

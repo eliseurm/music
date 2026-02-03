@@ -1,0 +1,190 @@
+<div class="file-explorer">
+  <div class="explorer-header">
+    <h3><i class="fas fa-music"></i> Partituras</h3>
+  </div>
+
+  <div class="accordion">
+    <!-- Painel 1: Arquivos -->
+    <div class="accordion-panel files" [class.active]="activePanel === 'files'">
+      <div class="panel-header" (click)="togglePanel('files')">
+        <span><i class="fas fa-file-alt"></i> Arquivos</span>
+        <i class="fas" [class.fa-chevron-down]="activePanel === 'files'" [class.fa-chevron-right]="activePanel !== 'files'"></i>
+      </div>
+
+      <div class="panel-content" *ngIf="activePanel === 'files'">
+        <div class="explorer-actions">
+          <div class="drop-zone"
+               (dragover)="dragOver($event)"
+               (dragleave)="dragLeave($event)"
+               (drop)="drop($event)">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Arraste arquivos aqui</p>
+            <p class="small">ou</p>
+
+            <label class="btn btn-primary" for="fileInput">
+              <i class="fas fa-file-upload"></i>
+              Selecionar Arquivo
+            </label>
+            <input type="file"
+                   id="fileInput"
+                   accept=".musicxml,.xml,.mscz"
+                   (change)="onFileSelected($event)"
+                   style="display: none;">
+
+            <p class="file-types">.musicxml, .xml, .mscz</p>
+          </div>
+
+          <div class="drive-section">
+            <div class="drive-buttons">
+              <button class="btn btn-outline drive-btn" (click)="loadGoogleDriveFiles()">
+                <i class="fab fa-google-drive"></i>
+                Google Drive
+              </button>
+              <button class="btn btn-icon config-btn" (click)="toggleConfig()" title="Configurar Google Drive">
+                <i class="fas fa-cog"></i>
+              </button>
+            </div>
+
+            <div *ngIf="showGoogleDrive" class="drive-files">
+              <div class="drive-header">
+                <div class="breadcrumb">
+                  <span *ngFor="let folder of folderHistory; let last = last"
+                        (click)="!last && navigateToFolder(folder)"
+                        [class.active]="last">
+                    {{ folder.name }}
+                    <i *ngIf="!last" class="fas fa-chevron-right separator"></i>
+                  </span>
+                </div>
+                <button class="btn btn-icon-sm"
+                        (click)="setDefaultFolder()"
+                        title="Definir esta pasta como padrão">
+                  <i class="fas fa-thumbtack"></i>
+                </button>
+              </div>
+
+              <div *ngIf="isLoading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Carregando...
+              </div>
+
+              <div *ngIf="!isLoading && files.length === 0" class="empty">
+                <i class="fas fa-folder-open"></i>
+                <p>Nenhum arquivo encontrado</p>
+              </div>
+
+              <ul *ngIf="!isLoading && files.length > 0" class="file-list">
+                <li *ngFor="let file of files"
+                    class="file-item"
+                    (click)="onFileItemClick(file)">
+                  <i [class]="getFileIcon(file)"></i>
+                  <span class="file-name">{{ file.name }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel 2: Seleção -->
+    <div class="accordion-panel selection" [class.active]="activePanel === 'selection'">
+      <div class="panel-header" (click)="togglePanel('selection')">
+        <span><i class="fas fa-list-ul"></i> Seleção</span>
+        <i class="fas" [class.fa-chevron-down]="activePanel === 'selection'" [class.fa-chevron-right]="activePanel !== 'selection'"></i>
+      </div>
+
+      <div class="panel-content" *ngIf="activePanel === 'selection'">
+        <div class="selection-actions" *ngIf="selectedScores$ | async as scores">
+          <div class="selection-toolbar" *ngIf="scores.length > 0">
+            <button *ngIf="!multiSelectMode" class="btn btn-sm btn-outline" (click)="enterMultiSelect()">
+              <i class="fas fa-check-square"></i> Selecionar
+            </button>
+
+            <ng-container *ngIf="multiSelectMode">
+              <button class="btn btn-sm btn-danger" (click)="deleteSelected()" [disabled]="checkedScores.size === 0">
+                <i class="fas fa-trash"></i> Excluir ({{checkedScores.size}})
+              </button>
+              <button class="btn btn-sm" (click)="exitMultiSelect()">
+                Cancelar
+              </button>
+            </ng-container>
+          </div>
+
+          <div *ngIf="scores.length === 0" class="empty-selection">
+            <i class="fas fa-music"></i>
+            <p>Nenhuma partitura selecionada.</p>
+            <p class="small">Adicione arquivos no painel "Arquivos".</p>
+          </div>
+
+          <ul class="selection-list" *ngIf="scores.length > 0">
+            <li *ngFor="let score of scores; let i = index"
+                class="selection-item"
+                [class.checked]="checkedScores.has(score.id)"
+                [attr.draggable]="!multiSelectMode ? true : null"
+                (dragstart)="onDragStart($event, i)"
+                (dragover)="onDragOverListItem($event)"
+                (drop)="onDropListItem($event, i, scores)"
+                (dragend)="onDragEnd()"
+                (click)="onScoreClick(score)">
+
+              <div class="item-main">
+                <input type="checkbox" *ngIf="multiSelectMode"
+                       [checked]="checkedScores.has(score.id)"
+                       (click)="$event.stopPropagation()"
+                       (change)="toggleScoreCheck(score.id)">
+
+                <i class="fas fa-bars drag-handle" *ngIf="!multiSelectMode"></i>
+                <span class="score-name" [title]="score.name">{{ score.name }}</span>
+              </div>
+
+              <div class="item-actions" *ngIf="!multiSelectMode">
+                <button class="btn-icon-sm" (click)="onResetScore($event, score.id)" title="Resetar configurações">
+                  <i class="fas fa-undo"></i>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuração -->
+  <div class="modal-overlay" *ngIf="showConfig" (click)="toggleConfig()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>Configuração Google Drive</h3>
+
+      <div class="account-info" *ngIf="driveConfig.userEmail">
+        <label>Conta Conectada:</label>
+        <div class="user-display">
+          <i class="fas fa-user-circle"></i>
+          <span>{{ driveConfig.userEmail }}</span>
+        </div>
+        <p class="info-text">Sua conta será mantida por 15 dias para acesso rápido.</p>
+      </div>
+
+      <div class="account-info" *ngIf="!driveConfig.userEmail">
+        <p>Nenhuma conta conectada. Clique em "Login" para acessar seu Google Drive.</p>
+      </div>
+
+      <div class="form-group" *ngIf="driveConfig.defaultFolderName">
+        <label>Pasta Padrão Atual:</label>
+        <div class="default-folder-info">
+          <i class="fas fa-folder"></i>
+          <span>{{ driveConfig.defaultFolderName }}</span>
+          <button class="btn-clear" (click)="driveConfig.defaultFolderId = ''; driveConfig.defaultFolderName = ''; saveDriveConfig()" title="Limpar pasta padrão">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" (click)="toggleConfig()">Fechar</button>
+        <button class="btn btn-primary" (click)="loginAndReload()">
+          <i class="fab fa-google"></i>
+          {{ driveConfig.userEmail ? 'Trocar Conta / Login' : 'Fazer Login' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

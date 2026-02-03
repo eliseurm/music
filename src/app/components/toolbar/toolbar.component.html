@@ -1,0 +1,80 @@
+<nav class="toolbar">
+  <!-- Botão de menu para sidebar -->
+  <div class="toolbar-group">
+    <button class="btn btn-icon" (click)="toggleSidebar.emit()" title="Mostrar/Ocultar Sidebar">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Tonalidade -->
+  <div class="toolbar-group">
+    <span class="label">Tonalidade:</span>
+    <select class="select" [ngModel]="currentKey" (ngModelChange)="onKeyChange($event)">
+      @for (key of keys; track key) {
+        <option [value]="key">{{ key }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Seleção de Instrumentos -->
+  <div class="toolbar-group" *ngIf="instruments.length > 0">
+    <span class="label">Instrumentos:</span>
+    <div class="dropdown">
+      <button class="btn dropdown-toggle">
+        <i class="fas fa-list"></i>
+        Selecionar
+      </button>
+      <div class="dropdown-content">
+        @for (inst of instruments; track inst.id) {
+          <label class="dropdown-item">
+            <input type="checkbox"
+                   [checked]="inst.visible"
+                   (change)="onInstrumentToggle(inst.id, $event)">
+            {{ inst.name }}
+          </label>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão de posições -->
+  <div class="toolbar-group">
+    <button class="btn"
+            [class.active]="showPositions"
+            (click)="onTogglePositions()">
+      <i class="fa-regular fa-trombone" aria-hidden="true"></i>
+      {{ showPositions ? 'Ocultar' : 'Mostrar' }} Posições
+    </button>
+  </div>
+
+  <!-- Zoom controls -->
+  <div class="toolbar-group">
+    <button class="btn btn-icon" (click)="zoomOut.emit()" title="Zoom Out">
+      <i class="fas fa-search-minus"></i>
+    </button>
+
+    <span class="zoom-display">{{ zoomLevel.toFixed(1) }}x</span>
+
+    <button class="btn btn-icon" (click)="zoomIn.emit()" title="Zoom In">
+      <i class="fas fa-search-plus"></i>
+    </button>
+  </div>
+
+  <div class="toolbar-group right">
+    <button class="btn btn-primary" (click)="onSaveSettings()">
+      <i class="fas fa-save"></i>
+      Salva Seleção
+    </button>
+
+    <button class="btn btn-icon" (click)="toggleFullscreen.emit()" title="Maximizar Partitura">
+      <i class="fas fa-expand"></i>
+    </button>
+  </div>
+</nav>
+
+<div class="toolbar-bottom" *ngIf="fileName">
+  <div class="file-info">
+    <i class="fas fa-file-alt"></i>
+    <span>Partitura: <strong>{{ fileName }}</strong></span>
+  </div>
+</div>
