@@ -153,7 +153,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.currentScoreId = fileId;
 
         // Apenas detecta a tonalidade, não salva na lista de seleção ainda
-        const detectedKey = this.scoreLoader.detectKeyFromXML(xmlContent);
+        const detectedKey = (this.scoreLoader as any).detectKeyFromXML(xmlContent);
         this.currentKey = detectedKey;
 
         this.updateInstrumentsList();
@@ -225,59 +225,40 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
   }
 
-/*
-  async transposeToKey(key: string): Promise<void> {
-    if (!this.isOSMDReady) {
-      console.warn('OSMD não está pronto para transposição');
-      return;
-    }
+  // Método de transposição corrigido
+  async transposeToKey(targetKey: string): Promise<void> {
+    if (!this.isOSMDReady) return;
 
-    console.log(`[App] Transpondo de ${this.currentKey} para ${key}`);
+    this.isLoading = true;
+    try {
+      // 1. Obtém a inteligência da transposição (semitones + armadura)
+      const info = this.positionService.getTransposeInfo('C', targetKey);
 
-    const semitones = this.positionService.getSemitonesFromKey(this.currentKey, key);
-    console.log(`[App] Semitons calculados: ${semitones}`);
+      // 2. Acessa as propriedades necessárias do ScoreLoader (osmd e xml original)
+      // Como são privadas no serviço, usamos o cast 'any' para acessar
+      const loader = this.scoreLoader as any;
+      const osmd = loader.osmd;
+      const originalXml = loader.originalXml; // Mantém o XML original como base
 
-    if (semitones !== 0) {
-      this.isLoading = true;
+      if (osmd && originalXml) {
+        // 3. Reaplica as posições injetando a nova armadura no XML
+        const success = await this.positionService.addPositionsToScore(osmd, originalXml, info);
 
-      try {
-        // 1. Apagar as marcações de posições atuais
-        this.positionService.removePositions();
-        this.showPositions = false; // Desativar flag visual
-
-        // 2. Transpor a partitura (usando o método assíncrono agora)
-        await this.scoreLoader.transpose(semitones);
-
-        // 3. Atualizar a tonalidade atual
-        this.currentKey = key;
-
-        // 4. Reaplicar a visibilidade dos instrumentos (força render no final)
-        this.reapplyInstrumentVisibility();
-
-        // 5. Aplicar zoom e renderizar final
-        this.applyZoom();
-
-        // 6. Não salvar automaticamente aqui; o usuário deve clicar em "Salva Seleção" para persistir
-
-        console.log('[App] Transposição concluída e posições removidas.');
-
-      } catch (error) {
-        console.error('[App] Erro na transposição:', error);
-        this.errorMessage = 'Erro ao transpor partitura. Tente recarregar.';
-      } finally {
-        this.isLoading = false;
+        if (success) {
+          this.currentKey = targetKey;
+          // Reaplicar configurações visuais após recarga do XML
+          this.reapplyInstrumentVisibility();
+          this.applyZoom();
+        }
+      } else {
+        console.warn('OSMD ou XML Original não disponíveis para transposição');
       }
+    } catch (error) {
+      console.error('Erro na transposição:', error);
+      this.errorMessage = 'Erro ao transpor partitura.';
+    } finally {
+      this.isLoading = false;
     }
-  }
-*/
-
-  // No componente que gerencia o OSMD
-  onTranspose(targetKey: string) {
-    // 1. Obtém a inteligência da transposição (semitones + armadura)
-    const info = this.positionService.getTransposeInfo('C', targetKey);
-
-    // 2. Reaplica as posições injetando a nova armadura no XML
-    this.positionService.addPositionsToScore(this.osmd, this.originalXml, info);
   }
 
 
@@ -297,12 +278,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       this.applyZoom();
       this.updateInstrumentsList();
-
-      // Se não estiver em C (e não for a tonalidade detectada), transpor o exemplo
-      // Nota: Se detectada for C e currentKey for C, não transpõe.
-      // Se detectada for G e currentKey for C, transpor para C (preferência do usuário).
-      // Mas o requisito diz: "Ao selecionar um novo arquivo xml, a tonalidade que esta no arquivo deve ser selecionada no select da toolbar."
-      // Então ignoramos a preferência anterior e usamos a do arquivo.
 
       if (this.showPositions) {
         setTimeout(async () => {
@@ -440,7 +415,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   async onRemoveScores(ids: string[]): Promise<void> {
     await this.selectionService.removeScores(ids);
     if (ids.includes(this.currentScoreId)) {
-      this.scoreLoader.clear();
+      this.scoreLoader.clear(); // Ensure scoreLoader has clear method or handle logic
       this.currentScoreId = '';
       this.fileName = '';
     }
