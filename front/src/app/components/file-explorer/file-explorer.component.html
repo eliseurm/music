@@ -4,14 +4,14 @@
   </div>
 
   <div class="accordion">
-    <!-- Painel 1: Arquivos -->
-    <div class="accordion-panel files" [class.active]="activePanel === 'files'">
-      <div class="panel-header" (click)="togglePanel('files')">
-        <span><i class="fas fa-file-alt"></i> Arquivos</span>
-        <i class="fas" [class.fa-chevron-down]="activePanel === 'files'" [class.fa-chevron-right]="activePanel !== 'files'"></i>
+    <div class="accordion-panel local" [class.active]="activePanel === 'local'">
+
+      <div class="panel-header" (click)="togglePanel('local')">
+        <span><i class="fas fa-laptop"></i> Arquivo Local</span>
+        <i class="fas" [class.fa-chevron-down]="activePanel === 'local'" [class.fa-chevron-right]="activePanel !== 'local'"></i>
       </div>
 
-      <div class="panel-content" *ngIf="activePanel === 'files'">
+      <div class="panel-content" *ngIf="activePanel === 'local'">
         <div class="explorer-actions">
           <div class="drop-zone"
                (dragover)="dragOver($event)"
@@ -33,60 +33,108 @@
 
             <p class="file-types">.musicxml, .xml, .mscz</p>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <div class="drive-section">
-            <div class="drive-buttons">
-              <button class="btn btn-outline drive-btn" (click)="loadGoogleDriveFiles()">
+    <div class="accordion-panel drive" [class.active]="activePanel === 'drive'">
+
+      <div class="panel-header" (click)="togglePanel('drive')">
+        <span><i class="fab fa-google-drive"></i> Arquivo Drive</span>
+        <i class="fas" [class.fa-chevron-down]="activePanel === 'drive'" [class.fa-chevron-right]="activePanel !== 'drive'"></i>
+      </div>
+
+      <div class="panel-content" *ngIf="activePanel === 'drive'">
+        <div class="drive-section">
+          <div class="drive-controls">
+            <div class="drive-main-buttons">
+              <button class="btn btn-outline btn-sm" (click)="connectDrive()" title="Drive">
                 <i class="fab fa-google-drive"></i>
-                Google Drive
               </button>
-              <button class="btn btn-icon config-btn" (click)="toggleConfig()" title="Configurar Google Drive">
+              <button class="btn btn-outline btn-sm" (click)="loadGoogleDriveFiles(currentFolderId, undefined, true)" title="Atualizar">
+                <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+              </button>
+              <button class="btn btn-icon-sm" (click)="setDefaultFolder()" title="Definir esta pasta como padrão">
+                <i class="fas fa-thumbtack"></i>
+              </button>
+              <button class="btn btn-icon-sm" (click)="toggleConfig()" title="Configurar Google Drive">
                 <i class="fas fa-cog"></i>
               </button>
             </div>
+          </div>
 
-            <div *ngIf="showGoogleDrive" class="drive-files">
-              <div class="drive-header">
-                <div class="breadcrumb">
-                  <span *ngFor="let folder of folderHistory; let last = last"
-                        (click)="!last && navigateToFolder(folder)"
-                        [class.active]="last">
-                    {{ folder.name }}
-                    <i *ngIf="!last" class="fas fa-chevron-right separator"></i>
-                  </span>
+          <div class="drive-download-bar" *ngIf="selectedDriveFiles.length > 0">
+            <button class="btn btn-primary btn-sm w-full" (click)="downloadSelectedDriveFiles()" [disabled]="isDownloading">
+              <i class="fas" [class.fa-download]="!isDownloading" [class.fa-spinner]="isDownloading" [class.fa-spin]="isDownloading"></i>
+              {{ isDownloading ? 'Baixando...' : 'Baixar Selecionados (' + selectedDriveFiles.length + ')' }}
+            </button>
+          </div>
+
+          <div class="drive-files-container">
+            <div class="search-bar">
+              <input type="text"
+                     [(ngModel)]="searchQuery"
+                     (keyup.enter)="onSearchDrive()"
+                     placeholder="Buscar arquivo...">
+              <button class="btn btn-icon-sm" (click)="onSearchDrive()" title="Buscar">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+
+            <div class="drive-header">
+              <div class="breadcrumb">
+                <span *ngFor="let folder of folderHistory; let last = last"
+                      (click)="!last && navigateToFolder(folder)"
+                      [class.active]="last">
+                  {{ folder.name }}
+                  <i *ngIf="!last" class="fas fa-chevron-right separator"></i>
+                </span>
+              </div>
+            </div>
+
+            <div *ngIf="isLoading && files.length === 0" class="loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              Carregando...
+            </div>
+
+            <div *ngIf="!isLoading && files.length === 0" class="empty">
+              <i class="fas fa-folder-open"></i>
+              <p>Nenhum arquivo encontrado</p>
+            </div>
+
+            <p-listbox *ngIf="files.length > 0"
+                       [options]="files"
+                       [(ngModel)]="selectedDriveFiles"
+                       [multiple]="true"
+                       [checkbox]="true"
+                       [filter]="false"
+                       dataKey="id"
+                       optionLabel="name"
+                       [style]="{'width':'100%', 'border':'none'}"
+                       [listStyle]="{'max-height': '400px'}"
+                       class="drive-listbox">
+              <ng-template let-file pTemplate="item">
+                <div class="file-item-template" (click)="handleItemClick($event, file)">
+                  <div class="file-item-content">
+                    <i [class]="getFileIcon(file)"></i>
+                    <span class="file-name" [title]="file.name">{{ file.name }}</span>
+                  </div>
                 </div>
-                <button class="btn btn-icon-sm"
-                        (click)="setDefaultFolder()"
-                        title="Definir esta pasta como padrão">
-                  <i class="fas fa-thumbtack"></i>
-                </button>
-              </div>
+              </ng-template>
+            </p-listbox>
 
-              <div *ngIf="isLoading" class="loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                Carregando...
-              </div>
-
-              <div *ngIf="!isLoading && files.length === 0" class="empty">
-                <i class="fas fa-folder-open"></i>
-                <p>Nenhum arquivo encontrado</p>
-              </div>
-
-              <ul *ngIf="!isLoading && files.length > 0" class="file-list">
-                <li *ngFor="let file of files"
-                    class="file-item"
-                    (click)="onFileItemClick(file)">
-                  <i [class]="getFileIcon(file)"></i>
-                  <span class="file-name">{{ file.name }}</span>
-                </li>
-              </ul>
+            <div *ngIf="nextPageToken" class="pagination-footer">
+              <button class="btn btn-outline btn-sm w-full" (click)="loadMoreDrive()" [disabled]="isLoading">
+                <i class="fas fa-chevron-down" *ngIf="!isLoading"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+                Carregar mais
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Painel 2: Seleção -->
     <div class="accordion-panel selection" [class.active]="activePanel === 'selection'">
       <div class="panel-header" (click)="togglePanel('selection')">
         <span><i class="fas fa-list-ul"></i> Seleção</span>
@@ -147,9 +195,9 @@
         </div>
       </div>
     </div>
+
   </div>
 
-  <!-- Modal de Configuração -->
   <div class="modal-overlay" *ngIf="showConfig" (click)="toggleConfig()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <h3>Configuração Google Drive</h3>

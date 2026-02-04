@@ -176,7 +176,7 @@ export class GoogleDriveService {
 
   // --- Métodos de Arquivos ---
 
-  async listFiles(folderId: string = 'root'): Promise<any[]> {
+  async listFiles(folderId: string = 'root', pageToken?: string, nameFilter?: string): Promise<{files: any[], nextPageToken?: string}> {
     await this.initGoogleEcosystem();
 
     if (!this.accessToken) {
@@ -187,14 +187,20 @@ export class GoogleDriveService {
     try {
       if (!gapi.client.drive) await gapi.client.load(this.DRIVE_API_URL);
 
+      let query = `'${folderId}' in parents and trashed = false`;
+      if (nameFilter) {
+        query += ` and name contains '${nameFilter.replace(/'/g, "\\'")}'`;
+      }
+
       const response = await gapi.client.drive.files.list({
-        q: `'${folderId}' in parents and trashed = false`,
-        fields: 'files(id, name, mimeType, size, modifiedTime)',
-        pageSize: 100,
+        q: query,
+        fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
+        pageSize: 50,
+        pageToken: pageToken,
         orderBy: 'folder,name'
       });
 
-      return (response.result.files || []).map((file: any) => ({
+      const files = (response.result.files || []).map((file: any) => ({
         id: file.id,
         name: file.name,
         type: file.mimeType === 'application/vnd.google-apps.folder' ? 'folder' : 'file',
@@ -202,13 +208,18 @@ export class GoogleDriveService {
         size: file.size,
         modified: new Date(file.modifiedTime)
       }));
+
+      return {
+        files,
+        nextPageToken: response.result.nextPageToken
+      };
     } catch (error: any) {
       // Se der erro 401, tenta renovar (pode ser token expirado)
       if (error.status === 401 || (error.result && error.result.error.code === 401)) {
         console.log('🔄 [GoogleDrive] Token expirado. Renovando...');
         this.accessToken = null;
         await this.login(); // Tenta login normal
-        return this.listFiles(folderId);
+        return this.listFiles(folderId, pageToken, nameFilter);
       }
       throw error;
     }

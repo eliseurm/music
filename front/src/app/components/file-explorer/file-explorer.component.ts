@@ -6,6 +6,8 @@ import { GoogleDriveService, GoogleDriveConfig } from '../../services/google-dri
 import { ScoreSelectionService, SelectedScore } from '../../services/score-selection.service';
 import { Observable } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { ListboxModule } from 'primeng/listbox';
+import { CheckboxModule } from 'primeng/checkbox'; // Pode remover se não for usar checkbox avulso em outro lugar
 
 export interface FileItem {
   id: string;
@@ -19,7 +21,7 @@ export interface FileItem {
 @Component({
   selector: 'app-file-explorer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ListboxModule, CheckboxModule],
   templateUrl: './file-explorer.component.html',
   styleUrls: ['./file-explorer.component.scss']
 })
@@ -39,9 +41,17 @@ export class FileExplorerComponent implements OnInit {
   showConfig = false;
   currentFolderId: string = 'root';
   folderHistory: { id: string, name: string }[] = [];
+  nextPageToken: string | undefined = undefined;
+  searchQuery: string = '';
+
+  // REFATORADO: Array para armazenar os arquivos selecionados diretamente pelo Listbox
+  selectedDriveFiles: FileItem[] = [];
+
+  isDownloading = false;
+  isDriveConnected = false;
 
   // Accordion state
-  activePanel: 'files' | 'selection' | null = 'selection';
+  activePanel: 'local' | 'drive' | 'selection' | null = 'selection';
 
   // Selection state
   selectedScores$: Observable<SelectedScore[]>;
@@ -68,24 +78,49 @@ export class FileExplorerComponent implements OnInit {
     if (config) {
       this.driveConfig = { ...config };
     }
+    this.isDriveConnected = this.driveService.isAuthenticated();
+  }
+
+  async connectDrive(): Promise<void> {
+    try {
+      this.isLoading = true;
+      await this.driveService.login();
+      this.isDriveConnected = true;
+      const config = this.driveService.getConfig();
+      if (config) {
+        this.driveConfig = { ...config };
+      }
+      await this.loadGoogleDriveFiles();
+    } catch (error: any) {
+      console.error('Erro ao conectar ao Drive:', error);
+      if (error?.type !== 'popup_closed') {
+        this.messageService.add({ severity: 'error', summary: 'Google Drive', detail: 'Falha ao conectar ao Google Drive.' });
+      }
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   onFileSelected(event: Event): void {
-    console.log('[FileExplorer] Arquivo selecionado via input');
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      console.log(`[FileExplorer] Arquivo: ${file.name}, Tamanho: ${file.size}, Tipo: ${file.type}`);
       if (this.isValidFile(file)) {
         this.fileSelected.emit(file);
-      } else {
-        console.warn(`[FileExplorer] Extensão de arquivo inválida: ${file.name}`);
       }
     }
   }
 
-  async loadGoogleDriveFiles(folderId: string = 'root'): Promise<void> {
-    console.log(`[FileExplorer] Carregando arquivos da pasta: ${folderId}`);
+  async loadGoogleDriveFiles(folderId: string = 'root', pageToken?: string, isRefresh: boolean = false): Promise<void> {
+    console.log(`[FileExplorer] Carregando arquivos: ${folderId}`);
+
+    // REFATORADO: Usa o array do ngModel
+    const selectedFilesBefore = [...this.selectedDriveFiles];
+
+    if (isRefresh) {
+      this.selectedDriveFiles = [];
+      this.nextPageToken = undefined;
+    }
 
     if (!this.showGoogleDrive) {
       this.showGoogleDrive = true;
@@ -93,39 +128,116 @@ export class FileExplorerComponent implements OnInit {
 
     this.isLoading = true;
     try {
-      // Se for a primeira carga e houver pasta padrão, usa ela
-      if (folderId === 'root' && this.driveConfig.defaultFolderId && this.currentFolderId === 'root') {
+      if (folderId === 'root' && this.driveConfig.defaultFolderId && this.currentFolderId === 'root' && !pageToken && !isRefresh && !this.searchQuery) {
         folderId = this.driveConfig.defaultFolderId;
       }
 
-      this.files = await this.driveService.listFiles(folderId);
+      const result = await this.driveService.listFiles(folderId, pageToken, this.searchQuery);
+
+      if (pageToken) {
+        this.files = [...this.files, ...result.files];
+      } else {
+        this.files = result.files;
+
+        // Recoloca arquivos selecionados na lista visual se tiverem sumido (ex: durante busca)
+        if (this.searchQuery && selectedFilesBefore.length > 0) {
+          selectedFilesBefore.forEach(selectedFile => {
+            if (!this.files.some(f => f.id === selectedFile.id)) {
+              this.files.unshift(selectedFile);
+            }
+          });
+        }
+      }
+
+      this.nextPageToken = result.nextPageToken;
       this.currentFolderId = folderId;
 
-      // Se logou com sucesso, atualiza o config local (para pegar o email obtido)
       const updatedConfig = this.driveService.getConfig();
       if (updatedConfig) {
         this.driveConfig = { ...updatedConfig };
       }
 
-      // Atualizar histórico de navegação
-      if (folderId === 'root') {
-        this.folderHistory = [{ id: 'root', name: 'Meu Drive' }];
-      } else if (!this.folderHistory.find(f => f.id === folderId)) {
-        const folderName = await this.driveService.getFolderName(folderId);
-        this.folderHistory.push({ id: folderId, name: folderName });
-      } else {
-        // Se já existe, remove os itens à frente (navegação de volta)
-        const index = this.folderHistory.findIndex(f => f.id === folderId);
-        this.folderHistory = this.folderHistory.slice(0, index + 1);
+      if (!this.searchQuery && !pageToken) {
+        if (folderId === 'root') {
+          this.folderHistory = [{ id: 'root', name: 'Meu Drive' }];
+        } else if (!this.folderHistory.find(f => f.id === folderId)) {
+          const folderName = await this.driveService.getFolderName(folderId);
+          this.folderHistory.push({ id: folderId, name: folderName });
+        } else {
+          const index = this.folderHistory.findIndex(f => f.id === folderId);
+          this.folderHistory = this.folderHistory.slice(0, index + 1);
+        }
       }
-
-      console.log(`[FileExplorer] ${this.files.length} arquivos encontrados no Drive`);
     } catch (error) {
-      console.error('Erro ao carregar arquivos do Google Drive:', error);
+      console.error('Erro Drive:', error);
       this.files = [];
-      this.messageService.add({ severity: 'error', summary: 'Google Drive', detail: 'Não foi possível carregar os arquivos. Verifique sua conexão e tente novamente.' });
+      this.messageService.add({ severity: 'error', summary: 'Google Drive', detail: 'Erro ao carregar arquivos.' });
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  onSearchDrive(): void {
+    this.nextPageToken = undefined;
+    this.loadGoogleDriveFiles(this.currentFolderId);
+  }
+
+  loadMoreDrive(): void {
+    if (this.nextPageToken) {
+      this.loadGoogleDriveFiles(this.currentFolderId, this.nextPageToken);
+    }
+  }
+
+  // Métodos toggleDriveFileCheck REMOVIDOS - o p-listbox gerencia isso nativamente agora
+
+  async downloadSelectedDriveFiles(): Promise<void> {
+    // REFATORADO: Usa this.selectedDriveFiles
+    if (this.selectedDriveFiles.length === 0) return;
+
+    this.isDownloading = true;
+    let successCount = 0;
+
+    try {
+      for (const file of this.selectedDriveFiles) {
+        try {
+          console.log(`[FileExplorer] Baixando: ${file.name}`);
+          const xmlContent = await this.driveService.getFileContent(file.id);
+
+          if (xmlContent) {
+            const score: Omit<SelectedScore, 'order'> = {
+              id: `drive-${file.id}`,
+              name: file.name,
+              xmlContent: xmlContent,
+              originalXmlContent: xmlContent,
+              settings: {
+                zoomLevel: 1.0,
+                currentKey: '',
+                showPositions: false,
+                instrumentVisibility: {}
+              }
+            };
+
+            await this.selectionService.addScore(score);
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Erro ao baixar ${file.id}:`, err);
+        }
+      }
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Download Concluído',
+        detail: `${successCount} arquivo(s) adicionado(s).`
+      });
+
+      this.selectedDriveFiles = []; // Limpa seleção após baixar
+      this.activePanel = 'selection';
+
+    } catch (error) {
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao baixar arquivos.' });
+    } finally {
+      this.isDownloading = false;
     }
   }
 
@@ -133,11 +245,27 @@ export class FileExplorerComponent implements OnInit {
     await this.loadGoogleDriveFiles(folder.id);
   }
 
-  async onFileItemClick(file: FileItem): Promise<void> {
+  async onFileItemClick(event: any): Promise<void> {
+    // Nota: O clique nativo do p-listbox seleciona o item.
+    // Se for pasta, queremos navegar e não selecionar.
+    // O template interceptará cliques em pastas se necessário, ou verificamos aqui.
+    // Mas o p-listbox com checkbox="true" foca em seleção.
+    // Para navegação em pastas, é melhor usar um botão específico no template ou verificar o item.
+
+    // Como estamos usando selection mode, o clique na linha seleciona.
+    // Se quisermos navegar ao clicar na pasta, precisamos tratar isso.
+    // No template HTML, adicionaremos um handler específico para o clique na pasta.
+  }
+
+  // Método auxiliar para navegação ao clicar no ícone/nome da pasta (será chamado do template)
+  handleItemClick(event: Event, file: FileItem): void {
     if (file.type === 'folder') {
-      await this.loadGoogleDriveFiles(file.id);
+      event.stopPropagation(); // Impede seleção do checkbox
+      this.loadGoogleDriveFiles(file.id);
     } else {
-      this.selectDriveFile(file.id);
+      // Se for arquivo, deixa o comportamento padrão do listbox (selecionar)
+      // OU se quiser abrir visualização direta:
+      // this.selectDriveFile(file.id);
     }
   }
 
@@ -147,25 +275,20 @@ export class FileExplorerComponent implements OnInit {
       this.driveConfig.defaultFolderId = this.currentFolderId;
       this.driveConfig.defaultFolderName = folderName;
       this.driveService.saveConfig(this.driveConfig);
-      this.messageService.add({ severity: 'success', summary: 'Pasta padrão', detail: `Pasta "${folderName}" definida como padrão.` });
+      this.messageService.add({ severity: 'success', summary: 'Pasta padrão', detail: `Pasta definida.` });
     }
   }
 
   selectDriveFile(fileId: string): void {
-    console.log(`[FileExplorer] Arquivo do Drive selecionado: ${fileId}`);
     this.driveFileSelected.emit(fileId);
   }
 
   async loginAndReload(): Promise<void> {
     try {
-      // 1. Faz logout local para limpar estado da conta anterior
       if (this.driveConfig.userEmail) {
         this.driveService.logout();
       }
-
-      // 2. IMPORTANTE: Passa 'true' para forçar a tela de seleção de conta
       await this.driveService.login(true);
-
       const config = this.driveService.getConfig();
       if (config) {
         this.driveConfig = { ...config };
@@ -173,10 +296,8 @@ export class FileExplorerComponent implements OnInit {
       this.showConfig = false;
       await this.loadGoogleDriveFiles();
     } catch (error: any) {
-      console.error('Erro ao fazer login:', error);
-      // Ignora erro se usuário fechou o popup
       if (error?.type !== 'popup_closed') {
-        this.messageService.add({ severity: 'error', summary: 'Autenticação', detail: 'Não foi possível autenticar. Tente desativar bloqueadores de anúncio.' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha na autenticação.' });
       }
     }
   }
@@ -194,8 +315,7 @@ export class FileExplorerComponent implements OnInit {
   saveDriveConfig(): void {
     this.driveService.saveConfig(this.driveConfig);
     this.showConfig = false;
-    console.log('[FileExplorer] Configuração do Google Drive salva');
-    this.loadGoogleDriveFiles(); // Tenta carregar após salvar
+    this.loadGoogleDriveFiles();
   }
 
   dragOver(event: DragEvent): void {
@@ -212,13 +332,10 @@ export class FileExplorerComponent implements OnInit {
   }
 
   drop(event: DragEvent): void {
-    console.log('[FileExplorer] Arquivo solto na zona de drop');
     event.preventDefault();
     event.stopPropagation();
-
     if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
       const file = event.dataTransfer.files[0];
-      console.log(`[FileExplorer] Arquivo solto: ${file.name}`);
       if (this.isValidFile(file)) {
         this.fileSelected.emit(file);
       }
@@ -236,26 +353,24 @@ export class FileExplorerComponent implements OnInit {
       return 'fas fa-folder';
     }
     switch (file.extension.toLowerCase()) {
-      case '.mscz':
-        return 'fas fa-file-audio';
+      case '.mscz': return 'fas fa-file-audio';
       case '.musicxml':
-      case '.xml':
-        return 'fas fa-file-music';
-      default:
-        return 'fas fa-file';
+      case '.xml': return 'fas fa-file-music';
+      default: return 'fas fa-file';
     }
   }
 
-  // Accordion methods
-  togglePanel(panel: 'files' | 'selection'): void {
+  togglePanel(panel: 'local' | 'drive' | 'selection'): void {
     if (this.activePanel === panel) {
       this.activePanel = null;
     } else {
       this.activePanel = panel;
+      if (panel === 'drive' && this.isDriveConnected && this.files.length === 0 && !this.isLoading) {
+        this.loadGoogleDriveFiles(this.currentFolderId);
+      }
     }
   }
 
-  // Selection methods
   onScoreClick(score: SelectedScore): void {
     if (this.multiSelectMode) {
       this.toggleScoreCheck(score.id);
@@ -289,15 +404,12 @@ export class FileExplorerComponent implements OnInit {
       const count = this.checkedScores.size;
       this.confirmationService.confirm({
         header: 'Confirmar exclusão',
-        message: `Deseja remover ${count} partituras?`,
+        message: `Remover ${count} partituras?`,
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Remover',
-        rejectLabel: 'Cancelar',
-        acceptButtonStyleClass: 'p-button-danger',
         accept: () => {
           this.removeScores.emit(Array.from(this.checkedScores));
           this.exitMultiSelect();
-          this.messageService.add({ severity: 'success', summary: 'Excluído', detail: `${count} partitura(s) removida(s).` });
+          this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Partituras removidas.' });
         }
       });
     }
@@ -307,10 +419,8 @@ export class FileExplorerComponent implements OnInit {
     event.stopPropagation();
     this.confirmationService.confirm({
       header: 'Resetar partitura',
-      message: 'Deseja resetar as configurações desta partitura para o original?',
+      message: 'Restaurar configurações originais?',
       icon: 'pi pi-refresh',
-      acceptLabel: 'Resetar',
-      rejectLabel: 'Cancelar',
       accept: () => {
         this.resetScore.emit(id);
         this.messageService.add({ severity: 'success', summary: 'Resetado', detail: 'Configurações restauradas.' });
@@ -318,17 +428,11 @@ export class FileExplorerComponent implements OnInit {
     });
   }
 
-  // Drag and Drop reordering
   onDragStart(event: DragEvent, index: number): void {
-    if (this.multiSelectMode) {
-      // Não permitir arrastar no modo de seleção múltipla
-      event.preventDefault();
-      return;
-    }
+    if (this.multiSelectMode) { event.preventDefault(); return; }
     this.draggedItemIndex = index;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
-      // Alguns navegadores (Firefox) exigem setData para habilitar drop
       event.dataTransfer.setData('text/plain', String(index));
     }
   }
@@ -337,36 +441,25 @@ export class FileExplorerComponent implements OnInit {
     event.preventDefault();
   }
 
-  // Opcional: limpar estado se usuário cancelar o drag
-  // (alguns navegadores disparam dragend)
-  // Não quebra compatibilidade se não for chamado
   onDragEnd(): void {
     this.draggedItemIndex = null;
   }
 
   onDropListItem(event: DragEvent, targetIndex: number, scores: SelectedScore[]): void {
     event.preventDefault();
-
-    // Recupera índice de origem
     let fromIndex = this.draggedItemIndex;
     if (fromIndex === null && event.dataTransfer) {
       const data = event.dataTransfer.getData('text/plain');
       const parsed = parseInt(data, 10);
-      if (!isNaN(parsed)) {
-        fromIndex = parsed;
-      }
+      if (!isNaN(parsed)) fromIndex = parsed;
     }
-
     if (fromIndex === null || fromIndex === targetIndex) {
       this.draggedItemIndex = null;
       return;
     }
-
     const newScores = [...scores];
     const draggedItem = newScores.splice(fromIndex, 1)[0];
     newScores.splice(targetIndex, 0, draggedItem);
-
-    // Emite nova ordem para persistência
     this.orderChanged.emit(newScores);
     this.draggedItemIndex = null;
   }
