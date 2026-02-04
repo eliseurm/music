@@ -93,7 +93,7 @@ export class GoogleDriveService {
    * Realiza login.
    * @param forceAccountSelect Se true, força a tela de escolha de conta.
    */
-  async login(forceAccountSelect: boolean = false): Promise<void> {
+  async login(forceAccountSelect: boolean = false, silent: boolean = false): Promise<void> {
     // Garante que o ecossistema está carregado
     if (!this.initPromise) await this.initGoogleEcosystem();
     else await this.initPromise;
@@ -124,12 +124,21 @@ export class GoogleDriveService {
       if (forceAccountSelect) {
         prompt = 'select_account';
       } else if (!this.accessToken) {
-        prompt = 'consent';
+        if (silent) {
+          prompt = 'none';
+        } else {
+          prompt = 'consent';
+        }
       }
 
       // IMPORTANTE: Skip prompt se já temos token e não é para forçar troca
       // Isso evita popups desnecessários em reloads
-      this.tokenClient.requestAccessToken({ prompt: prompt });
+      try {
+        this.tokenClient.requestAccessToken({ prompt: prompt });
+      } catch (err) {
+        console.error('Erro ao solicitar token:', err);
+        reject(err);
+      }
     });
   }
 
@@ -155,6 +164,14 @@ export class GoogleDriveService {
   }
 
   isAuthenticated(): boolean {
+    return !!this.accessToken || (!!this.config && !!this.config.userEmail);
+  }
+
+  /**
+   * ADICIONE ESTE MÉTODO AQUI (DENTRO DO SERVIÇO)
+   * Verifica se existe um token de acesso válido em memória.
+   */
+  hasValidAccessToken(): boolean {
     return !!this.accessToken;
   }
 
@@ -180,8 +197,13 @@ export class GoogleDriveService {
     await this.initGoogleEcosystem();
 
     if (!this.accessToken) {
-      console.log('🔒 [GoogleDrive] Token ausente. Iniciando login...');
-      await this.login();
+      console.log('🔒 [GoogleDrive] Token ausente. Tentando login silencioso...');
+      try {
+        await this.login(false, true);
+      } catch (e) {
+        console.warn('🔒 [GoogleDrive] Login silencioso falhou. Requer ação do usuário.');
+        throw { status: 401, message: 'Authentication required' };
+      }
     }
 
     try {
@@ -228,7 +250,13 @@ export class GoogleDriveService {
   async getFolderName(folderId: string): Promise<string> {
     if (folderId === 'root') return 'Meu Drive';
     await this.initGoogleEcosystem();
-    if (!this.accessToken) await this.login();
+    if (!this.accessToken) {
+      try {
+        await this.login(false, true);
+      } catch (e) {
+        return 'Pasta Desconhecida';
+      }
+    }
     try {
       if (!gapi.client.drive) await gapi.client.load(this.DRIVE_API_URL);
       const response = await gapi.client.drive.files.get({ fileId: folderId, fields: 'name' });
@@ -238,7 +266,13 @@ export class GoogleDriveService {
 
   async getFileContent(fileId: string): Promise<string> {
     await this.initGoogleEcosystem();
-    if (!this.accessToken) await this.login();
+    if (!this.accessToken) {
+      try {
+        await this.login(false, true);
+      } catch (e) {
+        throw { status: 401, message: 'Authentication required' };
+      }
+    }
     try {
       if (!gapi.client.drive) await gapi.client.load(this.DRIVE_API_URL);
       const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });

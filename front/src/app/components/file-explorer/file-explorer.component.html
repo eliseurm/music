@@ -46,21 +46,32 @@
 
       <div class="panel-content" *ngIf="activePanel === 'drive'">
         <div class="drive-section">
+
           <div class="drive-controls">
             <div class="drive-main-buttons">
-              <button class="btn btn-outline btn-sm" (click)="connectDrive()" title="Drive">
+              <button class="btn btn-outline btn-sm"
+                      (click)="connectDrive()"
+                      [disabled]="!isDriveConnected"
+                      title="Abrir Drive / Carregar Arquivos">
                 <i class="fab fa-google-drive"></i>
               </button>
-              <button class="btn btn-outline btn-sm" (click)="loadGoogleDriveFiles(currentFolderId, undefined, true)" title="Atualizar">
-                <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
-              </button>
-              <button class="btn btn-icon-sm" (click)="setDefaultFolder()" title="Definir esta pasta como padrão">
-                <i class="fas fa-thumbtack"></i>
-              </button>
+
               <button class="btn btn-icon-sm" (click)="toggleConfig()" title="Configurar Google Drive">
                 <i class="fas fa-cog"></i>
               </button>
+
+              <button class="btn btn-outline btn-sm"
+                      (click)="loadGoogleDriveFiles(currentFolderId, undefined, true)"
+                      [disabled]="!isDriveConnected"
+                      title="Atualizar">
+                <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+              </button>
+
+              <button class="btn btn-icon-sm" (click)="setDefaultFolder()" title="Definir esta pasta como padrão">
+                <i class="fas fa-thumbtack"></i>
+              </button>
             </div>
+
           </div>
 
           <div class="drive-download-bar" *ngIf="selectedDriveFiles.length > 0">

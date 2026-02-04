@@ -74,27 +74,90 @@ export class FileExplorerComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Carrega a configuração salva no cookie
     const config = this.driveService.getConfig();
     if (config) {
       this.driveConfig = { ...config };
     }
+
+    // Define se o botão deve começar habilitado.
+    // isAuthenticated retorna true se tiver token OU se tiver email salvo na config
     this.isDriveConnected = this.driveService.isAuthenticated();
   }
 
+  // Ação do Botão Drive (Ícone do Drive)
+  // Agora ele assume que já existe uma configuração, apenas carrega os arquivos.
+// Ação do Botão Drive (Ícone do Drive)
+// ... dentro de file-explorer.component.ts
+
+  // Ação do Botão Drive
   async connectDrive(): Promise<void> {
+    if (!this.driveConfig.userEmail) {
+      this.toggleConfig();
+      return;
+    }
+
+    this.isLoading = true;
+
+    try {
+      // Verifica no SERVIÇO se o token existe
+      if (!this.driveService.hasValidAccessToken()) {
+        console.log('[FileExplorer] Sem token em memória. Iniciando renovação...');
+        await this.driveService.login(false, false);
+      }
+
+      this.isDriveConnected = true;
+      await this.loadGoogleDriveFiles();
+
+    } catch (error: any) {
+      console.error('[FileExplorer] Erro ao conectar:', error);
+      this.isDriveConnected = false;
+
+      if (error?.type === 'popup_closed') {
+        this.messageService.add({ severity: 'warn', summary: 'Cancelado', detail: 'Login cancelado.' });
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao conectar ao Drive.' });
+      }
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  // Ação do Botão Configuração -> "Fazer Login / Trocar Conta"
+  async loginAndReload(): Promise<void> {
     try {
       this.isLoading = true;
-      await this.driveService.login();
-      this.isDriveConnected = true;
+
+      // Se já tinha alguém logado, faz logout local antes de trocar
+      if (this.driveConfig.userEmail) {
+        this.driveService.logout();
+      }
+
+      // Login Interativo (true): Abre popup do Google para escolher conta
+      await this.driveService.login(true);
+
+      // Atualiza configuração local após sucesso
       const config = this.driveService.getConfig();
       if (config) {
         this.driveConfig = { ...config };
       }
+
+      // SUCESSO: Habilita o botão do Drive e fecha o modal
+      this.isDriveConnected = true;
+      this.showConfig = false;
+
+      // Já carrega os arquivos imediatamente para feedback visual
       await this.loadGoogleDriveFiles();
+
     } catch (error: any) {
-      console.error('Erro ao conectar ao Drive:', error);
+      console.error('Login falhou', error);
       if (error?.type !== 'popup_closed') {
-        this.messageService.add({ severity: 'error', summary: 'Google Drive', detail: 'Falha ao conectar ao Google Drive.' });
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha na autenticação.' });
+      }
+      // Se falhou, mantemos desconectado (ou o estado anterior)
+      // Se não tem e-mail, botão do drive fica desabilitado
+      if (!this.driveConfig.userEmail) {
+        this.isDriveConnected = false;
       }
     } finally {
       this.isLoading = false;
@@ -113,6 +176,14 @@ export class FileExplorerComponent implements OnInit {
 
   async loadGoogleDriveFiles(folderId: string = 'root', pageToken?: string, isRefresh: boolean = false): Promise<void> {
     console.log(`[FileExplorer] Carregando arquivos: ${folderId}`);
+
+    // Se não houver email configurado, nem tenta carregar
+    const config = this.driveService.getConfig();
+    if (!config || !config.userEmail) {
+      this.isDriveConnected = false;
+      return;
+    }
+    this.driveConfig = { ...config };
 
     // REFATORADO: Usa o array do ngModel
     const selectedFilesBefore = [...this.selectedDriveFiles];
@@ -133,6 +204,8 @@ export class FileExplorerComponent implements OnInit {
       }
 
       const result = await this.driveService.listFiles(folderId, pageToken, this.searchQuery);
+
+      this.isDriveConnected = true; // Se listFiles funcionou, está conectado
 
       if (pageToken) {
         this.files = [...this.files, ...result.files];
@@ -283,25 +356,6 @@ export class FileExplorerComponent implements OnInit {
     this.driveFileSelected.emit(fileId);
   }
 
-  async loginAndReload(): Promise<void> {
-    try {
-      if (this.driveConfig.userEmail) {
-        this.driveService.logout();
-      }
-      await this.driveService.login(true);
-      const config = this.driveService.getConfig();
-      if (config) {
-        this.driveConfig = { ...config };
-      }
-      this.showConfig = false;
-      await this.loadGoogleDriveFiles();
-    } catch (error: any) {
-      if (error?.type !== 'popup_closed') {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha na autenticação.' });
-      }
-    }
-  }
-
   toggleConfig(): void {
     this.showConfig = !this.showConfig;
     if (this.showConfig) {
@@ -315,6 +369,11 @@ export class FileExplorerComponent implements OnInit {
   saveDriveConfig(): void {
     this.driveService.saveConfig(this.driveConfig);
     this.showConfig = false;
+    // Se mudou algo na config (como e-mail), garante que o componente saiba
+    const config = this.driveService.getConfig();
+    if (config) {
+      this.driveConfig = { ...config };
+    }
     this.loadGoogleDriveFiles();
   }
 
@@ -365,9 +424,14 @@ export class FileExplorerComponent implements OnInit {
       this.activePanel = null;
     } else {
       this.activePanel = panel;
-      if (panel === 'drive' && this.isDriveConnected && this.files.length === 0 && !this.isLoading) {
+
+      // REMOVIDO: O trecho abaixo causava o carregamento automático.
+      // Agora o carregamento só ocorrerá se o usuário clicar explicitamente no botão do Drive.
+
+      /* if (panel === 'drive' && this.isDriveConnected && this.files.length === 0 && !this.isLoading) {
         this.loadGoogleDriveFiles(this.currentFolderId);
       }
+      */
     }
   }
 
