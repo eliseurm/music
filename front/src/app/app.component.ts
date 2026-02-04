@@ -1,17 +1,16 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
-import { FileExplorerComponent } from './components/file-explorer/file-explorer.component';
-import { SettingsPanelComponent } from './components/settings-panel/settings-panel.component';
-import { ScoreLoaderService } from './services/score-loader.service';
-import { TrombonePositionService } from './services/trombone-position.service';
-import { GoogleDriveService } from './services/google-drive.service';
-import { ScoreSelectionService, SelectedScore } from './services/score-selection.service';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {ToolbarComponent} from './components/toolbar/toolbar.component';
+import {FileExplorerComponent} from './components/file-explorer/file-explorer.component';
+import {ScoreLoaderService} from './services/score-loader.service';
+import {TrombonePositionService} from './services/trombone-position.service';
+import {GoogleDriveService} from './services/google-drive.service';
+import {ScoreSelectionService, SelectedScore} from './services/score-selection.service';
 
-import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import {ToastModule} from 'primeng/toast';
+import {ConfirmDialogModule} from 'primeng/confirmdialog';
+import {ConfirmationService, MessageService} from 'primeng/api';
 
 @Component({
   selector: 'app-root',
@@ -226,6 +225,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
   }
 
+/*
   async transposeToKey(key: string): Promise<void> {
     if (!this.isOSMDReady) {
       console.warn('OSMD não está pronto para transposição');
@@ -268,6 +268,16 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.isLoading = false;
       }
     }
+  }
+*/
+
+  // No componente que gerencia o OSMD
+  onTranspose(targetKey: string) {
+    // 1. Obtém a inteligência da transposição (semitones + armadura)
+    const info = this.positionService.getTransposeInfo('C', targetKey);
+
+    // 2. Reaplica as posições injetando a nova armadura no XML
+    this.positionService.addPositionsToScore(this.osmd, this.originalXml, info);
   }
 
 

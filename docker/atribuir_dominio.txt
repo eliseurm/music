@@ -1,0 +1,58 @@
+# 1. Faça login na sua conta
+gcloud auth login
+
+# 2. Defina o projeto onde o serviço está rodando
+gcloud config set project music-project-486219
+gcloud services enable run.googleapis.com --project=music-project-486219
+
+# 3. Mapear o Domínio
+# Execute o comando abaixo, substituindo nome-do-servico pelo nome exato do seu serviço no Cloud Run (provavelmente music-front baseando-se na sua URL) e a região correta (sua URL indica southamerica-east1).
+gcloud beta run domain-mappings create \
+  --service=music-front \
+  --domain=music.eliseu.eng.br \
+  --region=southamerica-east1
+
+# ATENCAO: Se o dominio ainda nao estiver verificado, ele deve ser verificado antes de ser mapeado.
+# Acesse: https://search.google.com/search-console/welcome
+# gere um TXT e informe no seu servidor de dns
+# Apos verificar, tente novamente.
+
+
+# ATENCAO2: Se o dominio nao registrar por estar em sao paulo, use o firebase para rotear o dominio
+
+# instalar firebase
+npm install -g firebase-tools
+
+# logar no firebase
+firebase logout
+firebase login
+# Responda N nas duas perguntas
+
+# Registre seu projeto no firebase
+# Acesse o site e siga os passos
+https://console.firebase.google.com/
+
+# vc tem que selecionar o projeto do cloud run que ja existe 'music-project'
+
+
+# Logue com o usuario google correto, ele deve ser dono do seu projeto
+# Vá para a pasta do seu projeto angular (onde está o seu código) e rode:
+# Este comndo quando da certo deve criar o arquivo firebase.json
+firebase init hosting
+
+escolha: Create a new project
+informe o servicoid: music-project-486219
+
+
+
+# Publicar alteracoes
+#Case tenha alterado firebase.json .firebaserc ou a pasta public, rode este comando novamente
+firebase deploy --only hosting --project music-project-486219
+
+# Agora vinculo o subdominio ao projeto firebase
+# Acesse a pagina
+https://console.firebase.google.com/u/0/project/music-project/hosting/sites/_/domains?hl=pt-br
+menu: Criacao->Hosting
+
+Siga as instrucoes, quando voltar na tela de dominios,Gerenciar Site'm clique em 'Adicionar um dominio personalizado'
+

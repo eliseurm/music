@@ -1,22 +1,24 @@
 <nav class="toolbar">
-  <!-- Botão de menu para sidebar -->
   <div class="toolbar-group">
     <button class="btn btn-icon" (click)="toggleSidebar.emit()" title="Mostrar/Ocultar Sidebar">
       <i class="fas fa-bars"></i>
     </button>
   </div>
 
-  <!-- Tonalidade -->
   <div class="toolbar-group">
     <span class="label">Tonalidade:</span>
-    <select class="select" [ngModel]="currentKey" (ngModelChange)="onKeyChange($event)">
-      @for (key of keys; track key) {
-        <option [value]="key">{{ key }}</option>
-      }
-    </select>
+
+    <p-select
+      [options]="keys"
+      [(ngModel)]="currentKey"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Selecione"
+      (onChange)="onKeyChange($event)"
+      [style]="{'width': '180px'}">
+    </p-select>
   </div>
 
-  <!-- Seleção de Instrumentos -->
   <div class="toolbar-group" *ngIf="instruments.length > 0">
     <span class="label">Instrumentos:</span>
     <div class="dropdown">
@@ -37,17 +39,15 @@
     </div>
   </div>
 
-  <!-- Botão de posições -->
   <div class="toolbar-group">
     <button class="btn"
             [class.active]="showPositions"
             (click)="onTogglePositions()">
-      <i class="fa-regular fa-trombone" aria-hidden="true"></i>
+      <img src="assets/images/trombone.ico" alt="Ícone Trombone" style="width: 16px; height: 16px; margin-right: 5px;">
       {{ showPositions ? 'Ocultar' : 'Mostrar' }} Posições
     </button>
   </div>
 
-  <!-- Zoom controls -->
   <div class="toolbar-group">
     <button class="btn btn-icon" (click)="zoomOut.emit()" title="Zoom Out">
       <i class="fas fa-search-minus"></i>
@@ -63,7 +63,7 @@
   <div class="toolbar-group right">
     <button class="btn btn-primary" (click)="onSaveSettings()">
       <i class="fas fa-save"></i>
-      Salva Seleção
+      Salvar
     </button>
 
     <button class="btn btn-icon" (click)="toggleFullscreen.emit()" title="Maximizar Partitura">
@@ -71,10 +71,3 @@
     </button>
   </div>
 </nav>
-
-<div class="toolbar-bottom" *ngIf="fileName">
-  <div class="file-info">
-    <i class="fas fa-file-alt"></i>
-    <span>Partitura: <strong>{{ fileName }}</strong></span>
-  </div>
-</div>

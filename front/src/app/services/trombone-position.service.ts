@@ -272,12 +272,19 @@ export class TrombonePositionService {
   }
 
   // Analisa o MusicXML para encontrar e adicionar posições apenas em pautas de trombone
-  addPositionsToXML(xmlContent: string): string {
+  addPositionsToXML(xmlContent: string, transposeInfo?: { semitones: number, fifths: number }): string {
     try {
-      console.log('[Trombone Service] Analisando MusicXML para adicionar posições...');
-
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlContent, 'application/xml');
+
+      // --- NOVA LÓGICA DE ARMADURA ---
+      if (transposeInfo) {
+        const fifthsElements = xmlDoc.getElementsByTagName('fifths');
+        for (let i = 0; i < fifthsElements.length; i++) {
+          fifthsElements[i].textContent = transposeInfo.fifths.toString();
+        }
+        console.log(`[Trombone Service] Armadura alterada para: ${transposeInfo.fifths} (Quintas)`);
+      }
 
       // Verificar erros de parsing
       const parserError = xmlDoc.getElementsByTagName('parsererror');
@@ -441,7 +448,7 @@ export class TrombonePositionService {
   }
 
   // Processar um arquivo XML já carregado no OSMD
-  async addPositionsToXMLScore(osmd: any, xmlContent?: string): Promise<boolean> {
+  async addPositionsToXMLScore(osmd: any, xmlContent?: string, transposeInfo?: any): Promise<boolean> {
     try {
       if (!osmd) {
         console.error('[Trombone Service] OSMD não inicializado');
@@ -458,7 +465,8 @@ export class TrombonePositionService {
       console.log('[Trombone Service] XML obtido, processando...');
 
       // Adicionar posições ao XML (usando lógica idêntica ao plugin)
-      const newXml = this.addPositionsToXML(xml);
+      // const newXml = this.addPositionsToXML(xml);
+      const newXml = this.addPositionsToXML(xml, transposeInfo);
 
       // Recarregar a partitura com as posições
       if (newXml !== xml) {
@@ -519,13 +527,14 @@ export class TrombonePositionService {
   }
 
   // Método principal para adicionar posições
-  addPositionsToScore(osmd?: any, xmlContent?: string): Promise<boolean> {
+  addPositionsToScore(osmd?: any, xmlContent?: string, transposeInfo?: any): Promise<boolean> {
     return new Promise(async (resolve) => {
       try {
         console.log('[Trombone Service] Iniciando adição de posições...');
 
         // Tentar adicionar posições via XML (método preferencial para manter com zoom)
-        const success = await this.addPositionsToXMLScore(osmd, xmlContent);
+        // const success = await this.addPositionsToXMLScore(osmd, xmlContent);
+        const success = await this.addPositionsToXMLScore(osmd, xmlContent, transposeInfo);
 
         // O usuário quer que usemos a classe que lê o XML, então removemos o fallback visual que causava problemas
         if (!success) {
@@ -693,15 +702,60 @@ export class TrombonePositionService {
     return keys[newIndex];
   }
 
+/*
   getSemitonesFromKey(fromKey: string, toKey: string): number {
     const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const fromIndex = keys.indexOf(fromKey);
-    const toIndex = keys.indexOf(toKey);
 
-    if (fromIndex === -1 || toIndex === -1) return 0;
+    const normalize = (key: string): string => {
+      const map: { [key: string]: string } = {
+        'Cb': 'B',
+        'Db': 'C#',
+        'Eb': 'D#',
+        'Gb': 'F#',
+        'Ab': 'G#',
+        'Bb': 'A#'
+      };
+      return map[key] || key; // Retorna a nota convertida ou a original se não houver no mapa
+    };
 
-    return (toIndex - fromIndex + 12) % 12;
+    const fromIndex = keys.indexOf(normalize(fromKey));
+    const toIndex = keys.indexOf(normalize(toKey));
+
+    if (fromIndex === -1 || toIndex === -1) {
+      return 0;
+    }
+
+    const result = (toIndex - fromIndex + 12) % 12;
+    // return result;
+    return toIndex;
+
   }
+*/
+
+  getTransposeInfo(fromKey: string, toKey: string) {
+    const keyMap: { [key: string]: { pc: number, fifths: number } } = {
+      'Cb': { pc: 11, fifths: -7 }, 'C': { pc: 0, fifths: 0 }, 'C#': { pc: 1, fifths: 7 },
+      'Db': { pc: 1, fifths: -5 },  'D': { pc: 2, fifths: 2 },
+      'D#': { pc: 3, fifths: 9 },   'Eb': { pc: 3, fifths: -3 },  'E': { pc: 4, fifths: 4 },
+      'F':  { pc: 5, fifths: -1 },  'F#': { pc: 6, fifths: 6 },
+      'Gb': { pc: 6, fifths: -6 },  'G': { pc: 7, fifths: 1 },
+      'G#': { pc: 8, fifths: 8 },   'Ab': { pc: 8, fifths: -4 },  'A': { pc: 9, fifths: 3 },
+      'A#': { pc: 10, fifths: 10 }, 'Bb': { pc: 10, fifths: -2 }, 'B': { pc: 11, fifths: 5 }
+    };
+
+    const from = keyMap[fromKey] || keyMap['C'];
+    const to = keyMap[toKey] || keyMap['C'];
+
+    // pc = Pitch Class (0 a 11) para cálculo da posição da vara
+    const semitones = (to.pc - from.pc + 12) % 12;
+
+    return {
+      semitones: semitones,
+      fifths: to.fifths, // Define a armadura (ex: -5 para Reb, 7 para Do#)
+      keyName: toKey
+    };
+  }
+
 
   hasPositions(): boolean {
     return this.positionsAdded;

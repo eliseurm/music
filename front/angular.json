@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "partitura-show": {
+    "music-front": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -18,7 +18,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/partitura-show",
+            "outputPath": "dist/music-front",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -62,10 +62,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "partitura-show:build:production"
+              "buildTarget": "music-front:build:production"
             },
             "development": {
-              "buildTarget": "partitura-show:build:development"
+              "buildTarget": "music-front:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,156 @@
+Cloud Run + Cloud SQL (PostgreSQL) — Preparação do Projeto (presente-project)
+
+1) Autenticação e seleção de projeto
+- Lista projeto atual: gcloud config list
+- Instale e autentique o SDK: gcloud auth login
+- Selecione o projeto: gcloud config set project presente-project
+
+2) APIs necessárias (habilitar uma vez)
+- Cloud Run API:            gcloud services enable run.googleapis.com
+- Cloud Build API:          gcloud services enable cloudbuild.googleapis.com
+- Artifact Registry API:    gcloud services enable artifactregistry.googleapis.com
+- Cloud SQL Admin API:      gcloud services enable sqladmin.googleapis.com
+- Secret Manager API (opc): gcloud services enable secretmanager.googleapis.com
+
+3) Contas de serviço e permissões (IAM)
+
+3.1) Conta de serviço do deploy (Cloud Build padrão)
+- menu: Busque por 'Cloud Build' -> Permissoes
+- link direto: https://console.cloud.google.com/cloud-build/builds
+- Email da SA do Cloud Build: PROJECT_NUMBER@cloudbuild.gserviceaccount.com
+- Nao encontrei esta conta, parece que a conta atual e PROJECT_NUMBER-compute@developer.gserviceaccount.com
+- menu: IAM e admin -> IAM, aqui dei os papeis
+- Conceder papéis (no projeto presente-project):
+  • Cloud Run Admin                   roles/run.admin
+  • Service Account User              roles/iam.serviceAccountUser
+  • Cloud SQL Client                  roles/cloudsql.client
+  • Artifact Registry Administrator   roles/artifactregistry.admin   (ou writer, conforme política)
+
+3.2) Conta de serviço de runtime do Cloud Run
+- Usaremos a conta padrão do Compute Engine por simplicidade:
+  • Email: PROJECT_NUMBER-compute@developer.gserviceaccount.com
+  • Conceder papéis (no projeto):
+    – Cloud SQL Client                    roles/cloudsql.client
+    – (Opcional) Secret Manager Accessor  roles/secretmanager.secretAccessor
+
+# 3.1 e 3.2 usando o terminal
+
+BUCKET="gs://presente-project_cloudbuild"
+BUCKET=$(gcloud builds describe 1 --project "$PROJECT_ID" 2>/dev/null | grep -oP 'gs://[^"]+_cloudbuild' || echo "gs://${PROJECT_ID}_cloudbuild")
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+
+CLOUDBUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/run.admin"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/cloudsql.client"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/iam.serviceAccountUser"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/storage.objectViewer"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/artifactregistry.admin"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/artifactregistry.reader"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${CLOUDBUILD_SA}" --role="roles/artifactregistry.writer"
+
+SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" --role="roles/cloudsql.client"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" --role="roles/secretmanager.secretAccessor"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" --role="roles/storage.objectViewer"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" --role="roles/logging.logWriter"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${SA}" --role="roles/artifactregistry.admin"
+
+# Para dar acesso irestrito a url.
+gcloud run services add-iam-policy-binding presente-front --member="user:secretaria@mensageiros.udi.br" --role="roles/orgpolicy.policyAdmin" --region="southamerica-east1"
+# No menu: IAM e admin -> Politica da organizacao, edite a restricao 'iam.allowedPolicyMemberDomains' e deixe o google gerenciar, depois de acesso allUser
+gcloud run services add-iam-policy-binding presente-front --region=southamerica-east1 --member="allUsers" --role="roles/run.invoker"
+
+coloquei estes na mao
+*Administrador do Cloud Run
+*Usuário da conta de serviço
+
+
+
+
+
+
+
+Observação: Você pode criar uma SA específica para o runtime (ex.: run-presente-sa@presente-project.iam.gserviceaccount.com) e conceder os mesmos papéis acima, depois passar --service-account no deploy.
+
+4) Banco de Dados (Cloud SQL — Postgres)
+- Instância existente: presente-project:southamerica-east1:presente-sql
+- Verificar DB, usuário e senha (se ainda não existirem, criar):
+  . Instancia: presente-sql
+  . Senha: Clube_pwd#123
+  • Database: presente_db
+  • Usuário:  presente_user
+  • Senha:    Presente_pwd#123
+
+5) Variáveis de ambiente do Backend (sem Secret Manager nesta primeira etapa)
+- SPRING_PROFILES_ACTIVE=prod
+- DB_NAME=presente_db
+- DB_USERNAME=presente_user
+- DB_PASSWORD=Presente_pwd#123
+- ADMIN_USERNAME=admin
+- ADMIN_PASSWORD=admin123
+- JWT_SECRET='uma-chave-bem-longa-de-dev-32bytes-min'  (≥ 32 bytes)
+
+6) Conexão ao Cloud SQL (Connector)
+- O serviço do Backend será implantado com:
+  • --add-cloudsql-instances presente-project:southamerica-east1:presente-sql
+  • SPRING_DATASOURCE_URL usando o Socket Factory para Postgres:
+    jdbc:postgresql:///${DB_NAME}?socketFactory=com.google.cloud.sql.postgres.SocketFactory&socketFactoryArg=presente-project:southamerica-east1:presente-sql
+- Requisito do app Java: dependência do Cloud SQL Socket Factory no pom.xml
+  <dependency>
+    <groupId>com.google.cloud.sql</groupId>
+    <artifactId>postgres-socket-factory</artifactId>
+    <version>1.13.1</version>
+  </dependency>
+
+7) Frontend (Cloud Run)
+- O serviço do Front usará Nginx (porta 8080) e fará proxy de /api → BACKEND_URL (URL pública do serviço do backend).
+- O Cloud Run trata HTTPS/443. Não é necessário gerenciar certificados no container.
+
+8) (Opcional) Secret Manager
+- Se quiser migrar segredos para o Secret Manager, crie secrets e conceda roles/secretmanager.secretAccessor à SA de runtime do Cloud Run. Exemplo de nomes de secrets:
+  • presente-db-password       (DB_PASSWORD)
+  • presente-jwt-secret        (JWT_SECRET)
+  • presente-admin-password    (ADMIN_PASSWORD)
+- No deploy, substitua --set-env-vars por --set-secrets, por exemplo:
+  --set-secrets DB_PASSWORD=projects/PROJECT_NUMBER/secrets/presente-db-password:latest
+
+9) Redes e VPC
+- Para --add-cloudsql-instances não é obrigatório configurar VPC Connector (o Cloud SQL connector gerencia a conectividade).
+- Garanta apenas que o projeto tenha as APIs acima habilitadas e permissões corretas nas SAs.
+
+10) Verificações pós-deploy
+- Obter URL do backend: gcloud run services describe presente-back --region southamerica-east1 --format='value(status.url)'
+- Testes rápidos:
+  • POST /api/auth/login (com ADMIN_USERNAME/ADMIN_PASSWORD) → retorna token
+  • GET  /api/admin/pessoas (com Authorization: Bearer <token>)
+  • GET  /api/presente/{primeiroNome}_{numeroMagico} (público)
+- Obter URL do frontend e acessar a aplicação. O front chamará /api → BACKEND_URL (backend).
+
+Checklist rápido
+[ ] APIs habilitadas (run, cloudbuild, artifactregistry, sqladmin, secretmanager-opc)
+[ ] Papéis no Cloud Build SA (run.admin, iam.serviceAccountUser, cloudsql.client, artifactregistry.admin)
+[ ] Papéis na SA de runtime do Cloud Run (cloudsql.client, secretmanager.secretAccessor-opc)
+[ ] DB, usuário e senha existentes
+[ ] JWT_SECRET com ≥ 32 bytes
+[ ] (Se Connector) Dependência postgres-socket-factory adicionada ao pom.xml do backend
+
+
+Comandos para teste
+
+# Para descrever o servico
+gcloud run services describe presente-back --region southamerica-east1
+gcloud run services describe presente-front --region southamerica-east1
+
+# Log do back
+# O nome do serviço é 'presente-back' e o Project ID é 'presente-project'
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=presente-back AND resource.labels.revision_name=presente-back-00012-thn " --project="presente-project" --limit 200 --format="value(textPayload)"
+gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=presente-back AND severity>=DEFAULT" --limit 200 --project="presente-project"
+
+# Testa login direto no back
+curl -i -X POST "https://presente-back-4eyszdohya-rj.a.run.app/api/auth/login"   -H 'Content-Type: application/json'   -d '{"username":"admin","password":"admin123"}'
+
+# Testa via front
+FRONT_URL=$(gcloud run services describe presente-front --region southamerica-east1 --format='value(status.url)'); echo $FRONT_URL ;
+curl -i -X POST "$FRONT_URL/api/auth/login" -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123"}'
+
+

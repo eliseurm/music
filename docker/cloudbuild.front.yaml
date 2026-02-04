@@ -1,0 +1,13 @@
+# Cloud Build config to build & push frontend image using docker/Dockerfile.front
+# Usage (from deploy script):
+# gcloud builds submit . --config docker/cloudbuild.front.yaml --substitutions _IMAGE=gcr.io/${PROJECT_ID}/${SERVICE_FRONT}:latest
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'docker/Dockerfile.front', '-t', '$_IMAGE', '.']
+
+images:
+  - '$_IMAGE'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
