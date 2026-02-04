@@ -56,3 +56,11 @@ menu: Criacao->Hosting
 
 Siga as instrucoes, quando voltar na tela de dominios,Gerenciar Site'm clique em 'Adicionar um dominio personalizado'
 
+
+# ####################
+# ##  Google drive  ##
+# ####################
+
+No cloud, va em 'API e servicos' -> Credenciais -> Criar credenciais -> OAuth client ID
+
+

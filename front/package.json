@@ -27,6 +27,7 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@primeng/themes": "^21.0.4",
     "@types/jszip": "^3.4.0",
+    "dexie": "^4.3.0",
     "jszip": "^3.10.1",
     "ngx-cookie-service": "^21.1.0",
     "opensheetmusicdisplay": "^1.9.5",

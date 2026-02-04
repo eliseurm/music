@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliseu Rodrigues | Portfólio Digital</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/primeicons/primeicons.css">
+  <link rel="stylesheet" href="https://unpkg.com/primeng/resources/themes/lara-light-blue/theme.css">
+  <link rel="stylesheet" href="https://unpkg.com/primeng/resources/primeng.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/primeflex@3.3.1/primeflex.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="profile-container">
+  <div class="header-section">
+    <div class="profile-image-wrapper">
+      <img src="assets/images/eliseu_figura_1.jpeg"
+           alt="Eliseu Rodrigues Menezes"
+           class="profile-image mb-3">
+    </div>
+
+    <div class="name-wrapper">
+      <h1 class="name-title m-0 mb-2">Eliseu Rodrigues Menezes</h1>
+    </div>
+
+    <p class="tagline text-xl font-medium text-800">
+      Engenheiro Software & Músico
+    </p>
+  </div>
+
+  <h3 class="section-title uppercase">Utilidades</h3>
+  <div class="grid">
+
+    <div class="col-12 md:col-6 lg:col-4">
+      <a href="/music" class="custom-card card-music shadow-3">
+        <div class="icon-circle">
+<!--          <i class="pi pi-book"></i>-->
+          <img src="assets/images/trombone.ico" alt="Ícone Trombone" style="width: 30px; height: 30px; margin-right: 5px;">
+        </div>
+        <div class="card-content">
+          <span class="block font-bold text-2xl">Partituras</span>
+          <small class="text-700">Transponha e facilite a leitura de partituras</small>
+        </div>
+        <div class="card-decoration">
+          <i class="pi pi-chevron-right"></i>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      <a href="/rachasocial" class="custom-card card-racha shadow-3">
+        <div class="icon-circle">
+          <i class="pi pi-wallet"></i>
+        </div>
+        <div class="card-content">
+          <span class="block font-bold text-2xl">Racha Social</span>
+          <small class="text-700">Divida a conta da confraternização entre amigos</small>
+        </div>
+        <div class="card-decoration">
+          <i class="pi pi-chevron-right"></i>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      <a href="https://www.instagram.com/eliseurm/" target="_blank" class="custom-card card-instagram shadow-3">
+        <div class="icon-circle">
+          <i class="pi pi-instagram"></i>
+        </div>
+        <div class="card-content">
+          <span class="block font-bold text-2xl">Instagram</span>
+          <small class="text-700">@eliseurm</small>
+        </div>
+        <div class="card-decoration">
+          <i class="pi pi-external-link"></i>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      <a href="https://www.facebook.com/eliseu.rodrigues" target="_blank" class="custom-card card-facebook shadow-3">
+        <div class="icon-circle">
+          <i class="pi pi-facebook"></i>
+        </div>
+        <div class="card-content">
+          <span class="block font-bold text-2xl">Facebook</span>
+          <small class="text-700">Conexões Profissionais</small>
+        </div>
+        <div class="card-decoration">
+          <i class="pi pi-external-link"></i>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <footer class="mt-8">
+    <div class="footer-content">
+      <p class="font-medium text-lg">
+        &copy; 2001 - <span id="current-year"></span> eliseu.eng.br
+      </p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

@@ -1,7 +1,6 @@
 <div #appContainer class="app-container" [class.fullscreen]="isFullscreen">
   <p-toast position="top-right"></p-toast>
   <p-confirmDialog></p-confirmDialog>
-  <!-- Toolbar -->
   <app-toolbar
     [class.hidden]="isFullscreen"
     [zoomLevel]="zoomLevel"
@@ -20,7 +19,6 @@
   </app-toolbar>
 
   <div class="main-content">
-    <!-- Sidebar para arquivos -->
     <app-file-explorer
       class="sidebar"
       [class.hidden]="!sidebarVisible || isFullscreen"
@@ -33,10 +31,8 @@
       [disabled]="!isOSMDReady">
     </app-file-explorer>
 
-    <!-- Área principal da partitura -->
     <div class="score-area" [class.fullscreen]="isFullscreen">
       <div #osmdContainer class="osmd-container">
-        <!-- Mensagens de estado -->
         <div *ngIf="isLoading" class="state-message loading">
           <i class="fas fa-spinner fa-spin"></i>
           <p>Carregando visualizador de partituras...</p>
@@ -60,7 +56,6 @@
     </div>
   </div>
 
-  <!-- Controles flutuantes no modo fullscreen (fora do container da partitura para garantir visibilidade) -->
   <div class="floating-controls" *ngIf="isFullscreen">
     <button class="float-btn" (click)="loadPreviousScore()" title="Partitura Anterior" *ngIf="selectedScores.length > 1">
       <i class="fas fa-chevron-left"></i>

@@ -1,0 +1,431 @@
+// Estilo baseado no Sakai PrimeNG
+:host {
+  display: block;
+  background-color: var(--surface-ground);
+  min-height: 100vh;
+}
+
+// Container principal
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+// Header estilo Sakai
+.app-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-radius: var(--border-radius-xl);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  color: white;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+
+  .title {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .subtitle {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+  }
+}
+
+// Cards estilo Sakai
+.sakai-card {
+  background: var(--surface-card);
+  border-radius: var(--border-radius-xl);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-1);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: var(--shadow-3);
+  }
+}
+
+// Toolbar
+.toolbar {
+  padding: 1rem 1.5rem;
+
+  .toolbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .toolbar-left {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+// Tabela
+.table-container {
+  padding: 0;
+  overflow: hidden;
+
+  ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+      color: var(--surface-700);
+      border-bottom: 2px solid var(--surface-border);
+    }
+
+    .p-datatable-tbody > tr {
+      border-bottom: 1px solid var(--surface-border);
+
+      &:hover {
+        background-color: var(--surface-hover);
+      }
+
+      > td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+// Informação do participante
+.participant-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.participant-name {
+  font-weight: 600;
+  color: var(--surface-900);
+}
+
+// Badges de consumo
+.consumo-badges {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-adultos {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-criancas {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+// Estado vazio
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+
+  .empty-icon {
+    font-size: 3rem;
+    color: var(--surface-300);
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--surface-700);
+  }
+
+  p {
+    margin: 0;
+    color: var(--surface-500);
+  }
+}
+
+// Grid de resumo compacto
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.summary-card {
+  padding: 1rem;
+  margin-bottom: 0;
+  height: 100%;
+}
+
+.summary-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 100%;
+}
+
+.summary-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+
+  &.icon-blue {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  &.icon-orange {
+    background: #fed7aa;
+    color: #ea580c;
+  }
+
+  &.icon-purple {
+    background: #e9d5ff;
+    color: #7c3aed;
+  }
+
+  &.icon-teal {
+    background: #a7f3d0;
+    color: #059669;
+  }
+}
+
+.summary-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-label {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  color: var(--surface-600);
+  font-weight: 500;
+}
+
+.summary-value {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+
+  &.text-blue { color: #1d4ed8; }
+  &.text-orange { color: #ea580c; }
+  &.text-purple { color: #7c3aed; }
+  &.text-teal { color: #059669; }
+}
+
+.pagantes-info {
+  .summary-value {
+    font-size: 1.25rem;
+    margin-bottom: 0.125rem;
+  }
+}
+
+.criancas-info {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--surface-600);
+}
+
+.summary-description {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--surface-500);
+  line-height: 1.2;
+}
+
+// Cores semânticas
+.text-receber {
+  color: var(--green-600);
+  font-weight: 700;
+}
+
+.text-pagar {
+  color: var(--red-600);
+  font-weight: 700;
+}
+
+.text-secondary {
+  color: var(--surface-400);
+}
+
+.italic {
+  font-style: italic;
+}
+
+// Dialog
+::ng-deep .p-dialog {
+  .p-dialog-content {
+    padding: 0;
+  }
+}
+
+.dialog-content {
+  padding: 1.5rem;
+}
+
+.dialog-section {
+  background: var(--surface-ground);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--surface-border);
+
+  &.section-active {
+    background: var(--blue-50);
+    border-color: var(--blue-200);
+  }
+}
+
+.section-title {
+  margin: 0 0 1rem 0;
+  color: var(--surface-900);
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.section-toggle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  font-weight: 600;
+  color: var(--surface-900);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.form-label {
+  text-align: right;
+  font-weight: 500;
+  color: var(--surface-700);
+
+  .required {
+    color: var(--red-500);
+  }
+}
+
+.form-field {
+  .field-hint {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--surface-500);
+  }
+}
+
+.quantidade-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.quantidade-item {
+  .quantidade-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--surface-600);
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .app-header {
+    padding: 1.5rem 1rem;
+
+    .title {
+      font-size: 1.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+    }
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .form-label {
+    text-align: left;
+  }
+
+  .quantidade-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-left {
+    justify-content: center;
+  }
+}

@@ -67,7 +67,7 @@ export const EXEMP_XML = `<?xml version="1.0" encoding="UTF-8"?>
     </defaults>
   <credit page="1">
     <credit-type>title</credit-type>
-    <credit-words default-x="600.241935" default-y="1611.210312" justify="center" valign="top" font-size="22">Partituras Trombone</credit-words>
+    <credit-words default-x="600.241935" default-y="1611.210312" justify="center" valign="top" font-size="22">Partitura</credit-words>
     </credit>
   <part-list>
     <score-part id="P1">

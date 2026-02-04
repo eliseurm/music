@@ -1,0 +1,295 @@
+/* Definindo as variáveis baseadas no home-page */
+:root {
+  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+  --glass-bg: rgba(255, 255, 255, 0.85); /* Vidro claro para painéis */
+  --glass-border: 1px solid rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
+  --text-main: #1f2937;
+  --text-secondary: #4b5563;
+}
+
+/* Animação do Background (idêntica à home) */
+@keyframes gradientShift {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+
+  /* Background Animado da Home */
+  background: var(--gradient-bg);
+  background-size: 200% 200%;
+  animation: gradientShift 10s ease infinite;
+
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-main);
+
+  /* Toolbar (assumindo que seja um componente filho, estilizamos o container se possível ou o componente deve ter estilo próprio) */
+  /* Se puder estilizar por aqui ou passar classes: */
+  app-toolbar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: var(--glass-border);
+    z-index: 10;
+  }
+
+  .main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    background: transparent; /* Transparente para mostrar o gradiente */
+    padding: 1rem; /* Espaçamento para criar o efeito flutuante */
+    gap: 1rem;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      padding: 0;
+      gap: 0;
+      overflow-y: auto;
+      height: calc(100vh - 56px);
+    }
+
+    .sidebar {
+      width: 300px;
+      min-width: 300px;
+
+      /* Efeito Glassmorphism na Sidebar */
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: var(--glass-border);
+      border-radius: 16px;
+      box-shadow: var(--glass-shadow);
+
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      overflow: hidden;
+
+      &.hidden {
+        width: 0;
+        min-width: 0;
+        border: none;
+        margin-right: 0;
+      }
+
+      @media (max-width: 768px) {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: 100%;
+        border-radius: 0;
+        border: none;
+        border-bottom: var(--glass-border);
+        flex: 0 0 auto;
+
+        &.hidden {
+          height: 0;
+          border-bottom: none;
+        }
+      }
+    }
+
+    .score-area {
+      flex: 1;
+      overflow: auto;
+      padding: 0; /* O container interno já dará o espaçamento visual */
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+
+      @media (max-width: 768px) {
+        padding: 10px;
+        width: 100%;
+        overflow: visible;
+      }
+
+      .osmd-container {
+        width: 100%;
+        max-width: 900px;
+        min-height: 600px;
+
+        /* Folha de papel branca sobre o fundo colorido */
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+
+        overflow: auto;
+        touch-action: pan-x pan-y;
+        padding: 20px;
+
+        /* Centralizar visualmente se for menor que a tela */
+        margin: auto 0;
+
+        @media (max-width: 768px) {
+          min-height: 400px;
+          margin: 0;
+          border-radius: 8px;
+        }
+
+        svg {
+          max-width: 100%;
+          height: auto;
+        }
+      }
+    }
+  }
+}
+
+/* Mensagens de estado (Loading, Error, Info) */
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  text-align: center;
+  padding: 2rem;
+
+  /* Texto mais escuro para contraste no papel branco */
+  color: var(--text-secondary);
+
+  &.loading {
+    color: #667eea;
+  }
+
+  &.error {
+    color: #f5576c;
+  }
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    /* Gradiente nos ícones */
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-main);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  .btn-retry {
+    margin-top: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 2rem;
+
+    /* Botão com gradiente da home */
+    background: var(--primary-gradient);
+    color: white;
+
+    border: none;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+  }
+}
+
+/* Override para o container do OSMD */
+.osmd-container {
+  position: relative !important;
+}
+
+/* ---- Modo Tela Cheia ---- */
+.app-container.fullscreen {
+  background: #000; /* Fundo preto para foco total */
+  animation: none;
+}
+
+.app-container .hidden {
+  display: none !important;
+}
+
+.app-container .main-content .score-area.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 0;
+  background: #000;
+}
+
+.app-container .main-content .score-area.fullscreen .osmd-container {
+  height: 100vh;
+  min-height: 100vh;
+  width: 100vw;
+  border-radius: 0;
+  box-shadow: none;
+  background: white;
+  margin: 0;
+  max-width: none;
+  overflow: auto;
+  padding: 10px;
+}
+
+/* Controles Flutuantes (Estilo atualizado) */
+.app-container .floating-controls {
+  position: fixed;
+  bottom: 30px; /* Mudei para baixo, estilo app mobile moderno, ou manter top se preferir */
+  right: 30px;
+  display: flex;
+  gap: 15px;
+  z-index: 1100;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  padding: 10px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.app-container .floating-controls .float-btn {
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  /* Gradiente nos botões flutuantes */
+  background: var(--primary-gradient);
+  color: #fff;
+  border: none;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

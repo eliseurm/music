@@ -1,0 +1,297 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="app-container">
+  <!-- Header -->
+  <div class="app-header">
+    <h1 class="title">Calculadora de Racha Social</h1>
+    <p class="subtitle">Gerencie os gastos da confraternização de forma justa e clara</p>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="sakai-card toolbar">
+    <div class="toolbar-content">
+      <div class="toolbar-left">
+        <button pButton pRipple label="Novo Participante" icon="pi pi-user-plus"
+                class="p-button-primary" (click)="openNew()"></button>
+        <button pButton pRipple label="Excluir Selecionados" icon="pi pi-trash"
+                class="p-button-outlined p-button-danger"
+                (click)="deleteSelectedItems()"
+                [disabled]="!selectedItems || !selectedItems.length"></button>
+      </div>
+      <div class="toolbar-right">
+        <button pButton pRipple label="Reiniciar Tabela" icon="pi pi-refresh"
+                class="p-button-text" (click)="clearTable()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela Principal -->
+  <div class="sakai-card table-container">
+    <p-table #dt [value]="items" [(selection)]="selectedItems" [rowHover]="true"
+             responsiveLayout="stack" breakpoint="768px" dataKey="id"
+             styleClass="p-datatable-striped">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px;">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+          <th pSortableColumn="nome" class="text-left">
+            Participante <p-sortIcon field="nome"></p-sortIcon>
+          </th>
+          <th pSortableColumn="valorGasto" class="text-right">
+            Total Gasto <p-sortIcon field="valorGasto"></p-sortIcon>
+          </th>
+          <th pSortableColumn="qtdeAdultos" class="text-center">
+            Consumo <p-sortIcon field="qtdeAdultos"></p-sortIcon>
+          </th>
+          <th class="text-right text-receber">A Receber</th>
+          <th class="text-right text-pagar">A Pagar</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-rachaItem>
+        <tr>
+          <td>
+            <p-tableCheckbox [value]="rachaItem"></p-tableCheckbox>
+          </td>
+          <td>
+            <div class="participant-info">
+              <div class="avatar">
+                {{rachaItem.nome.charAt(0).toUpperCase()}}
+              </div>
+              <span class="participant-name">{{rachaItem.nome}}</span>
+            </div>
+          </td>
+
+          <td class="text-right">
+            <span *ngIf="rachaItem.valorGasto && rachaItem.valorGasto > 0" class="valor-gasto">
+              {{rachaItem.valorGasto | currency:'BRL'}}
+            </span>
+            <span *ngIf="!rachaItem.valorGasto || rachaItem.valorGasto <= 0" class="text-secondary">-</span>
+          </td>
+
+          <td class="text-center">
+            <div *ngIf="rachaItem.pagar" class="consumo-badges">
+              <span class="badge badge-adultos">{{rachaItem.qtdeAdultos || 0}} Ad.</span>
+              <span *ngIf="rachaItem.qtdeCriancas && rachaItem.qtdeCriancas > 0" class="badge badge-criancas">
+                + {{rachaItem.qtdeCriancas}} Cr.
+              </span>
+            </div>
+            <span *ngIf="!rachaItem.pagar" class="text-secondary italic">Não consome</span>
+          </td>
+
+          <td class="text-right">
+            <span *ngIf="rachaItem.haReceber > 0" class="text-receber">
+              {{rachaItem.haReceber | currency:'BRL'}}
+            </span>
+          </td>
+
+          <td class="text-right">
+            <span *ngIf="rachaItem.haPagar > 0" class="text-pagar">
+              {{rachaItem.haPagar | currency:'BRL'}}
+            </span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-users empty-icon"></i>
+              <h3>A lista está vazia</h3>
+              <p>Clique em "Novo Participante" para começar</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Cards de Resumo - Layout compacto -->
+  <div class="summary-grid" *ngIf="items.length > 0">
+    <div class="sakai-card summary-card">
+      <div class="summary-content">
+        <div class="summary-icon icon-blue">
+          <i class="pi pi-receipt"></i>
+        </div>
+        <div class="summary-text">
+          <p class="summary-label">Custo Total da Festa</p>
+          <h2 class="summary-value text-blue">{{ resumo.totalGasto | currency:'BRL' }}</h2>
+          <p class="summary-description">Soma de todas as compras realizadas</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sakai-card summary-card">
+      <div class="summary-content">
+        <div class="summary-icon icon-orange">
+          <i class="pi pi-ticket"></i>
+        </div>
+        <div class="summary-text">
+          <p class="summary-label">Valor por Adulto (Cota)</p>
+          <h2 class="summary-value text-orange">{{ resumo.valorPorAdulto | currency:'BRL' }}</h2>
+          <p class="summary-description">Valor cheio para quem consumiu 100%</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sakai-card summary-card">
+      <div class="summary-content">
+        <div class="summary-icon icon-purple">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="summary-text">
+          <p class="summary-label">Total de Pagantes</p>
+          <div class="pagantes-info">
+            <h3 class="summary-value text-purple">{{ resumo.totalAdultos }} Adultos</h3>
+            <p class="criancas-info">+ {{ resumo.totalCriancas }} Crianças</p>
+          </div>
+          <p class="summary-description">Pessoas consideradas no rateio</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sakai-card summary-card">
+      <div class="summary-content">
+        <div class="summary-icon icon-teal">
+          <i class="pi pi-home"></i>
+        </div>
+        <div class="summary-text">
+          <p class="summary-label">Famílias/Grupos</p>
+          <h2 class="summary-value text-teal">{{ resumo.totalParticipantes }}</h2>
+          <p class="summary-description">Registros na tabela</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog -->
+<p-dialog [(visible)]="itemDialog" [style]="{width: '700px', maxWidth: '95vw'}"
+          header="Detalhes do Participante" [modal]="true" [draggable]="false"
+          [resizable]="false" styleClass="p-dialog-lg">
+
+  <ng-template pTemplate="content">
+    <div class="dialog-content">
+
+      <!-- Identificação -->
+      <div class="dialog-section">
+        <h3 class="section-title">
+          <i class="pi pi-id-card mr-2"></i> Identificação
+        </h3>
+        <div class="form-row">
+          <label for="nome" class="form-label">
+            Nome do Responsável <span class="required">*</span>
+          </label>
+          <div class="form-field">
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-user"></i>
+              </span>
+              <input type="text" pInputText id="nome" [(ngModel)]="item.nome"
+                     required autofocus placeholder="Ex: João da Silva" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gastos -->
+      <div class="dialog-section" [ngClass]="{'section-active': item.gastou}">
+        <div class="section-toggle">
+          <p-checkbox [(ngModel)]="item.gastou" [binary]="true" inputId="gastou"
+                      (onChange)="onGastouChange()" class="mr-3"></p-checkbox>
+          <label for="gastou" class="toggle-label">
+            Fez compras para a festa?
+          </label>
+        </div>
+
+        <div class="form-row" *ngIf="item.gastou">
+          <label for="valorGasto" class="form-label">
+            Valor Total Gasto <span class="required">*</span>
+          </label>
+          <div class="form-field">
+            <p-inputNumber id="valorGasto" [(ngModel)]="item.valorGasto"
+                           mode="currency" currency="BRL" locale="pt-BR"
+                           placeholder="R$ 0,00" styleClass="w-full">
+            </p-inputNumber>
+            <p class="field-hint">
+              <i class="pi pi-info-circle mr-1"></i>
+              Informe o valor total das notas fiscais
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Participação -->
+      <div class="dialog-section" [ngClass]="{'section-active': item.pagar}">
+        <div class="section-toggle">
+          <p-checkbox [(ngModel)]="item.pagar" [binary]="true" inputId="pagar"
+                      (onChange)="onPagarChange()" class="mr-3"></p-checkbox>
+          <label for="pagar" class="toggle-label">
+            Vai participar/consumir?
+          </label>
+        </div>
+
+        <ng-container *ngIf="item.pagar">
+          <div class="form-row">
+            <label class="form-label">
+              Quantidade de Pessoas <span class="required">*</span>
+            </label>
+            <div class="form-field">
+              <div class="quantidade-grid">
+                <div class="quantidade-item">
+                  <label for="adultos" class="quantidade-label">Adultos</label>
+                  <p-inputNumber id="adultos" [(ngModel)]="item.qtdeAdultos"
+                                 [showButtons]="true" [min]="0"
+                                 incrementButtonIcon="pi pi-plus"
+                                 decrementButtonIcon="pi pi-minus">
+                  </p-inputNumber>
+                </div>
+                <div class="quantidade-item">
+                  <label for="criancas" class="quantidade-label">Crianças</label>
+                  <p-inputNumber id="criancas" [(ngModel)]="item.qtdeCriancas"
+                                 [showButtons]="true" [min]="0"
+                                 incrementButtonIcon="pi pi-plus"
+                                 decrementButtonIcon="pi pi-minus"
+                                 (onInput)="onCriancasChange()">
+                  </p-inputNumber>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" *ngIf="item.qtdeCriancas && item.qtdeCriancas > 0">
+            <label for="percentual" class="form-label">
+              Cota da Criança (%) <span class="required">*</span>
+            </label>
+            <div class="form-field">
+              <div class="p-inputgroup">
+                <p-inputNumber id="percentual" [(ngModel)]="item.percentualCriancas"
+                               [min]="0" [max]="100" placeholder="50">
+                </p-inputNumber>
+                <span class="p-inputgroup-addon">%</span>
+              </div>
+              <p class="field-hint">
+                Quantos % de um adulto a criança paga?
+              </p>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton pRipple label="Cancelar" icon="pi pi-times"
+              class="p-button-text p-button-secondary"
+              (click)="hideDialog()"></button>
+      <button pButton pRipple label="Salvar" icon="pi pi-check"
+              class="p-button-primary"
+              (click)="saveItem()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
