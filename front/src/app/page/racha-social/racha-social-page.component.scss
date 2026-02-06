@@ -81,6 +81,10 @@
       font-weight: 600;
       color: var(--surface-700);
       border-bottom: 2px solid var(--surface-border);
+
+      .p-column-title {
+        display: none;
+      }
     }
 
     .p-datatable-tbody > tr {
@@ -93,6 +97,10 @@
       > td {
         padding: 1rem 1.5rem;
         vertical-align: middle;
+
+        .p-column-title {
+          display: none;
+        }
       }
     }
   }
@@ -386,46 +394,118 @@
 }
 
 // Responsividade
+// ... (resto do seu SCSS acima)
+
+// Responsividade
+// Responsividade Mobile
 @media (max-width: 768px) {
-  .app-container {
-    padding: 1rem;
-  }
 
-  .app-header {
-    padding: 1.5rem 1rem;
+  // Ajustes gerais
+  .app-container { padding: 1rem; }
+  .app-header { padding: 1.5rem 1rem; }
+  .toolbar-content { flex-direction: column; align-items: stretch; }
+  .toolbar-left, .toolbar-right { justify-content: center; width: 100%; }
 
-    .title {
-      font-size: 1.5rem;
+  // --- TABELA RESPONSIVA (CARDS) ---
+  ::ng-deep .p-datatable {
+
+    // Esconde o cabeçalho original da tabela
+    .p-datatable-thead {
+      display: none !important;
     }
 
-    .subtitle {
-      font-size: 1rem;
+    // Estilo da LINHA (que vira um CARD)
+    .p-datatable-tbody > tr {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius);
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+      // >>> ZEBRA STRIPING FORÇADO <<<
+
+      // Linhas ÍMPARES (Fundo Claro/Branco)
+      &:nth-child(odd) {
+        background-color: #ffffff !important; // Forçando branco puro
+
+        // Cabeçalho interno do card ímpar
+        > td:first-child {
+          background-color: #f8fafc !important; // Cinza muito leve
+        }
+      }
+
+      // Linhas PARES (Fundo Cinza/Escuro)
+      &:nth-child(even) {
+        background-color: #eff6ff !important; // Azul/Cinza bem claro para destaque
+        border: 1px solid #bfdbfe !important; // Borda levemente azulada
+
+        // Cabeçalho interno do card par
+        > td:first-child {
+          background-color: #dbeafe !important; // Azul um pouco mais forte
+          border-bottom-color: #bfdbfe !important;
+        }
+      }
+      // -----------------------------
+
+      // Estilo das CÉLULAS dentro do card
+      > td {
+        display: flex !important;
+        flex-direction: column !important; /* Título em cima, Dado em baixo */
+        align-items: flex-start !important;
+        justify-content: center !important;
+
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+        text-align: left !important;
+
+        &:last-child {
+          border-bottom: none !important;
+        }
+
+        // TÍTULO DA COLUNA (Ex: "TOTAL GASTOS")
+        .p-column-title {
+          display: block !important;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #64748b; // Cor fixa para garantir leitura
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 0.25rem;
+        }
+
+        // DADO DA COLUNA (Ex: "R$ 100,00")
+        .column-content {
+          width: 100%;
+          font-size: 1rem;
+          font-weight: 500;
+          color: var(--surface-900);
+        }
+
+        // Ajuste para alinhar textos que eram right/center no desktop
+        &.text-right, &.text-center {
+          text-align: left !important;
+          align-items: flex-start !important;
+        }
+
+        // --- CÉLULA DO CHECKBOX (Cabeçalho do Card) ---
+        &:first-child {
+          flex-direction: row !important; // Checkbox ao lado do texto
+          justify-content: space-between !important;
+          align-items: center !important;
+          padding: 0.5rem 1rem !important;
+          border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+
+          .p-column-title {
+            margin-bottom: 0;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+          }
+        }
+      }
     }
-  }
-
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-
-  .form-label {
-    text-align: left;
-  }
-
-  .quantidade-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .toolbar-left {
-    justify-content: center;
   }
 }
+

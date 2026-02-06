@@ -40,57 +40,83 @@
             Participante <p-sortIcon field="nome"></p-sortIcon>
           </th>
           <th pSortableColumn="valorGasto" class="text-right">
+            <span class="p-column-title">Total Gastos</span>
             Total Gasto <p-sortIcon field="valorGasto"></p-sortIcon>
           </th>
           <th pSortableColumn="qtdeAdultos" class="text-center">
+            <span class="p-column-title">Consumo</span>
             Consumo <p-sortIcon field="qtdeAdultos"></p-sortIcon>
           </th>
-          <th class="text-right text-receber">A Receber</th>
-          <th class="text-right text-pagar">A Pagar</th>
+          <th class="text-right text-receber">
+            <span class="p-column-title">A Receber</span>
+            A Receber
+          </th>
+          <th class="text-right text-pagar">
+            <span class="p-column-title">A Pagar</span>
+            A Pagar
+          </th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-rachaItem>
         <tr>
           <td>
+            <span class="p-column-title"></span> <div class="column-content">
             <p-tableCheckbox [value]="rachaItem"></p-tableCheckbox>
-          </td>
-          <td>
-            <div class="participant-info">
-              <div class="avatar">
-                {{rachaItem.nome.charAt(0).toUpperCase()}}
+          </div>
+          </td>          <td>
+            <span class="p-column-title"></span>
+            <div class="column-content">
+              <div class="participant-info">
+                <div class="avatar">
+                  {{rachaItem.nome.charAt(0).toUpperCase()}}
+                </div>
+                <span class="participant-name">{{rachaItem.nome}}</span>
               </div>
-              <span class="participant-name">{{rachaItem.nome}}</span>
             </div>
           </td>
 
           <td class="text-right">
-            <span *ngIf="rachaItem.valorGasto && rachaItem.valorGasto > 0" class="valor-gasto">
-              {{rachaItem.valorGasto | currency:'BRL'}}
-            </span>
-            <span *ngIf="!rachaItem.valorGasto || rachaItem.valorGasto <= 0" class="text-secondary">-</span>
+            <span class="p-column-title">Total Gastos</span>
+            <div class="column-content">
+              <span *ngIf="rachaItem.valorGasto && rachaItem.valorGasto > 0" class="valor-gasto">
+                {{rachaItem.valorGasto | currency:'BRL'}}
+              </span>
+              <span *ngIf="!rachaItem.valorGasto || rachaItem.valorGasto <= 0" class="text-secondary">-</span>
+            </div>
           </td>
 
           <td class="text-center">
-            <div *ngIf="rachaItem.pagar" class="consumo-badges">
-              <span class="badge badge-adultos">{{rachaItem.qtdeAdultos || 0}} Ad.</span>
-              <span *ngIf="rachaItem.qtdeCriancas && rachaItem.qtdeCriancas > 0" class="badge badge-criancas">
-                + {{rachaItem.qtdeCriancas}} Cr.
-              </span>
+            <span class="p-column-title">Consumo</span>
+            <div class="column-content">
+              <div *ngIf="rachaItem.pagar" class="consumo-badges">
+                <span class="badge badge-adultos">{{rachaItem.qtdeAdultos || 0}} Ad.</span>
+                <span *ngIf="rachaItem.qtdeCriancas && rachaItem.qtdeCriancas > 0" class="badge badge-criancas">
+                  + {{rachaItem.qtdeCriancas}} Cr.
+                </span>
+              </div>
+              <span *ngIf="!rachaItem.pagar" class="text-secondary italic">Não consome</span>
             </div>
-            <span *ngIf="!rachaItem.pagar" class="text-secondary italic">Não consome</span>
           </td>
 
           <td class="text-right">
-            <span *ngIf="rachaItem.haReceber > 0" class="text-receber">
-              {{rachaItem.haReceber | currency:'BRL'}}
-            </span>
+            <span class="p-column-title">A Receber</span>
+            <div class="column-content">
+              <span *ngIf="rachaItem.haReceber > 0" class="text-receber">
+                {{rachaItem.haReceber | currency:'BRL'}}
+              </span>
+              <span *ngIf="!(rachaItem.haReceber > 0)" class="text-secondary">-</span>
+            </div>
           </td>
 
           <td class="text-right">
-            <span *ngIf="rachaItem.haPagar > 0" class="text-pagar">
-              {{rachaItem.haPagar | currency:'BRL'}}
-            </span>
+            <span class="p-column-title">A Pagar</span>
+            <div class="column-content">
+              <span *ngIf="rachaItem.haPagar > 0" class="text-pagar">
+                {{rachaItem.haPagar | currency:'BRL'}}
+              </span>
+              <span *ngIf="!(rachaItem.haPagar > 0)" class="text-secondary">-</span>
+            </div>
           </td>
         </tr>
       </ng-template>
