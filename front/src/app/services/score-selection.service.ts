@@ -2,6 +2,20 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 
+export interface GlobalSettings {
+  currentKey: string;
+  instruments: string;
+  showPositions: boolean;
+  zoomLevel: number;
+}
+
+export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
+  currentKey: 'Padrão da partitura',
+  instruments: '',
+  showPositions: true,
+  zoomLevel: 0.7
+};
+
 export interface SelectedScore {
   id: string;
   name: string;
@@ -22,6 +36,7 @@ export interface SelectedScore {
 export class ScoreSelectionService {
   private dbName = 'ScoreViewerDB';
   private storeName = 'selectedScores';
+  private globalSettingsStore = 'globalSettings';
   private db: IDBDatabase | null = null;
   private dbReady: Promise<void>;
 
@@ -38,7 +53,7 @@ export class ScoreSelectionService {
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, 1);
+      const request = indexedDB.open(this.dbName, 2);
 
       request.onerror = (event) => {
         console.error('IndexedDB error:', event);
@@ -55,6 +70,9 @@ export class ScoreSelectionService {
         const db = (event.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains(this.storeName)) {
           db.createObjectStore(this.storeName, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(this.globalSettingsStore)) {
+          db.createObjectStore(this.globalSettingsStore);
         }
       };
     });
@@ -182,9 +200,9 @@ export class ScoreSelectionService {
       if (score) {
         score.xmlContent = score.originalXmlContent;
         score.settings = {
-          zoomLevel: 1.0,
+          zoomLevel: undefined as any,
           currentKey: '',
-          showPositions: false,
+          showPositions: undefined as any,
           instrumentVisibility: {}
         };
         store.put(score);
@@ -216,7 +234,43 @@ export class ScoreSelectionService {
     };
   }
 
-  private updateOrderCookie() {
+  public async getGlobalSettings(): Promise<GlobalSettings> {
+    if (!this.db) {
+      await this.initDB();
+    }
+    if (!this.db) return DEFAULT_GLOBAL_SETTINGS;
+
+    return new Promise((resolve) => {
+      const transaction = this.db!.transaction([this.globalSettingsStore], 'readonly');
+      const store = transaction.objectStore(this.globalSettingsStore);
+      const request = store.get('current');
+
+      request.onsuccess = () => {
+        resolve(request.result || DEFAULT_GLOBAL_SETTINGS);
+      };
+      request.onerror = () => {
+        resolve(DEFAULT_GLOBAL_SETTINGS);
+      };
+    });
+  }
+
+  public async saveGlobalSettings(settings: GlobalSettings): Promise<void> {
+    if (!this.db) {
+      await this.initDB();
+    }
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.globalSettingsStore], 'readwrite');
+      const store = transaction.objectStore(this.globalSettingsStore);
+      const request = store.put(settings, 'current');
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  public async updateOrderCookie() {
     const orderArray = this.selectedScoresSubject.value.map(s => s.id);
     this.cookieService.set('scores_order', JSON.stringify(orderArray), 30);
   }

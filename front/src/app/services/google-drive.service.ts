@@ -210,6 +210,9 @@ export class GoogleDriveService {
       if (!gapi.client.drive) await gapi.client.load(this.DRIVE_API_URL);
 
       let query = `'${folderId}' in parents and trashed = false`;
+      // Mostrar apenas pastas e arquivos .musicxml
+      query += ` and (mimeType = 'application/vnd.google-apps.folder' or name contains '.musicxml')`;
+      // Busca por substring no nome (tipo: *palavra*)
       if (nameFilter) {
         query += ` and name contains '${nameFilter.replace(/'/g, "\\'")}'`;
       }

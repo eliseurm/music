@@ -4,6 +4,58 @@
   </div>
 
   <div class="accordion">
+
+    <div class="accordion-panel settings" [class.active]="activePanel === 'settings'">
+      <div class="panel-header" (click)="togglePanel('settings')">
+        <span><i class="fas fa-cog"></i> Configurações</span>
+        <i class="fas" [class.fa-chevron-down]="activePanel === 'settings'" [class.fa-chevron-right]="activePanel !== 'settings'"></i>
+      </div>
+
+      <div class="panel-content" *ngIf="activePanel === 'settings'">
+        <div class="global-settings-form">
+          <div class="form-group">
+            <label>Tonalidade</label>
+            <p-select [options]="keyOptions" [(ngModel)]="globalSettings.currentKey"
+                      optionLabel="label" optionValue="value" [style]="{'width':'100%'}"></p-select>
+          </div>
+
+          <div class="form-group">
+            <label>Instrumentos (separados por ';')</label>
+            <input pInputText type="text" [(ngModel)]="globalSettings.instruments"
+                   placeholder="Ex: Trombone 1; Trombone 2" class="w-full" />
+          </div>
+
+          <div class="form-group flex-row">
+            <label>Mostrar Posição</label>
+            <p-toggleswitch [(ngModel)]="globalSettings.showPositions"></p-toggleswitch>
+          </div>
+
+          <div class="form-group">
+            <label>Zoom</label>
+            <p-inputnumber [(ngModel)]="globalSettings.zoomLevel"
+                           [min]="0.5" [max]="3.0" [step]="0.1"
+                           [showButtons]="true"
+                           buttonLayout="horizontal"
+                           decrementButtonClass="p-button-secondary"
+                           incrementButtonClass="p-button-secondary"
+                           incrementButtonIcon="pi pi-plus"
+                           decrementButtonIcon="pi pi-minus"
+                           [format]="true"
+                           [minFractionDigits]="1"
+                           [maxFractionDigits]="1"
+                           [inputStyle]="{'width': '100%'}">
+            </p-inputnumber>
+          </div>
+
+          <div class="settings-actions">
+            <button class="btn btn-primary btn-sm" (click)="saveGlobalSettings()">Salvar</button>
+            <button class="btn btn-outline btn-sm" (click)="restoreDefaultSettings()">Restaurar Padrão</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
     <div class="accordion-panel local" [class.active]="activePanel === 'local'">
 
       <div class="panel-header" (click)="togglePanel('local')">
@@ -50,14 +102,9 @@
           <div class="drive-controls">
             <div class="drive-main-buttons">
               <button class="btn btn-outline btn-sm"
-                      (click)="connectDrive()"
-                      [disabled]="!isDriveConnected"
+                      (click)="toggleConfig()"
                       title="Abrir Drive / Carregar Arquivos">
                 <i class="fab fa-google-drive"></i>
-              </button>
-
-              <button class="btn btn-icon-sm" (click)="toggleConfig()" title="Configurar Google Drive">
-                <i class="fas fa-cog"></i>
               </button>
 
               <button class="btn btn-outline btn-sm"

@@ -1,13 +1,17 @@
 // components/file-explorer/file-explorer.component.ts
-import {Component, Output, EventEmitter, Input, OnInit} from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoogleDriveService, GoogleDriveConfig } from '../../services/google-drive.service';
-import { ScoreSelectionService, SelectedScore } from '../../services/score-selection.service';
+import { ScoreSelectionService, SelectedScore, GlobalSettings, DEFAULT_GLOBAL_SETTINGS } from '../../services/score-selection.service';
 import { Observable } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ListboxModule } from 'primeng/listbox';
-import { CheckboxModule } from 'primeng/checkbox'; // Pode remover se não for usar checkbox avulso em outro lugar
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 export interface FileItem {
   id: string;
@@ -21,7 +25,16 @@ export interface FileItem {
 @Component({
   selector: 'app-file-explorer',
   standalone: true,
-  imports: [CommonModule, FormsModule, ListboxModule, CheckboxModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ListboxModule,
+    CheckboxModule,
+    InputNumberModule,
+    InputTextModule,
+    SelectModule,
+    ToggleSwitchModule
+  ],
   templateUrl: './file-explorer.component.html',
   styleUrls: ['./file-explorer.component.scss']
 })
@@ -51,7 +64,28 @@ export class FileExplorerComponent implements OnInit {
   isDriveConnected = false;
 
   // Accordion state
-  activePanel: 'local' | 'drive' | 'selection' | null = 'selection';
+  activePanel: 'local' | 'drive' | 'selection' | 'settings' | null = 'selection';
+
+  globalSettings: GlobalSettings = { ...DEFAULT_GLOBAL_SETTINGS };
+
+  keyOptions = [
+    { label: 'Padrão da partitura', value: 'Padrão da partitura' },
+    { label: 'Dó Maior', value: 'C' },
+    { label: 'Sol Maior', value: 'G' },
+    { label: 'Ré Maior', value: 'D' },
+    { label: 'Lá Maior', value: 'A' },
+    { label: 'Mi Maior', value: 'E' },
+    { label: 'Si Maior', value: 'B' },
+    { label: 'Fá# Maior', value: 'F#' },
+    { label: 'Dó# Maior', value: 'C#' },
+    { label: 'Fá Maior', value: 'F' },
+    { label: 'Sib Maior', value: 'Bb' },
+    { label: 'Mib Maior', value: 'Eb' },
+    { label: 'Lab Maior', value: 'Ab' },
+    { label: 'Reb Maior', value: 'Db' },
+    { label: 'Solb Maior', value: 'Gb' },
+    { label: 'Dob Maior', value: 'Cb' }
+  ];
 
   // Selection state
   selectedScores$: Observable<SelectedScore[]>;
@@ -73,7 +107,7 @@ export class FileExplorerComponent implements OnInit {
     this.selectedScores$ = this.selectionService.selectedScores$;
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Carrega a configuração salva no cookie
     const config = this.driveService.getConfig();
     if (config) {
@@ -83,6 +117,23 @@ export class FileExplorerComponent implements OnInit {
     // Define se o botão deve começar habilitado.
     // isAuthenticated retorna true se tiver token OU se tiver email salvo na config
     this.isDriveConnected = this.driveService.isAuthenticated();
+
+    // Carregar configurações globais do IndexedDB
+    this.globalSettings = await this.selectionService.getGlobalSettings();
+  }
+
+  async saveGlobalSettings(): Promise<void> {
+    try {
+      await this.selectionService.saveGlobalSettings(this.globalSettings);
+      this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações globais salvas.' });
+    } catch (error) {
+      console.error('[FileExplorer] Erro ao salvar configurações globais:', error);
+      this.messageService.add({ severity: 'error', summary: 'Erro', detail: 'Falha ao salvar configurações.' });
+    }
+  }
+
+  restoreDefaultSettings(): void {
+    this.globalSettings = { ...DEFAULT_GLOBAL_SETTINGS };
   }
 
   // Ação do Botão Drive (Ícone do Drive)
@@ -419,7 +470,7 @@ export class FileExplorerComponent implements OnInit {
     }
   }
 
-  togglePanel(panel: 'local' | 'drive' | 'selection'): void {
+  togglePanel(panel: 'local' | 'drive' | 'selection' | 'settings'): void {
     if (this.activePanel === panel) {
       this.activePanel = null;
     } else {

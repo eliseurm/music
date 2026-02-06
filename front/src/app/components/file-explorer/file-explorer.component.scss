@@ -73,8 +73,8 @@
         background: var(--sidebar-bg);
 
         /* Comportamento por painel */
-        /* Arquivos: altura do conteúdo, sem forçar scroll */
-        .local &, .drive & {
+        /* Arquivos e Configurações: altura do conteúdo, sem forçar scroll */
+        .local &, .drive &, .settings & {
           flex: 0 0 auto;
           overflow: visible;
         }
@@ -85,6 +85,47 @@
         }
       }
     }
+  }
+
+  .global-settings-form {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      &.flex-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .w-full {
+        width: 100%;
+      }
+
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+
+      button {
+        flex: 1;
+      }
+    }
+
   }
 
   .explorer-actions {
@@ -156,219 +197,230 @@
       }
     }
 
-    .drive-section {
-      padding: 1rem;
+  }
 
-      .drive-controls {
+  .drive-section {
+    padding: 0.5rem;
+
+    .drive-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .drive-main-buttons {
         display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
+        gap: 0.5rem;
+        justify-content: center; /* Centraliza os botões horizontalmente */
+        align-items: center;
+        width: 100%; /* Garante que o container ocupe toda a largura para poder centralizar */
 
-        .drive-main-buttons {
+        .btn-sm {
+          padding: 0.4rem 0.6rem;
+          font-size: 1rem;
+          /* ... restante do css dos botões ... */
+          &.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            opacity: 1;
+            cursor: default;
+          }
+          &:disabled:not(.active) {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+        i {
+          font-size: 1.1rem;
+        }
+      }
+    }
+
+    .drive-download-bar {
+      margin-bottom: 1rem;
+
+      .w-full {
+        width: 100%;
+      }
+    }
+
+    .drive-files-container {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: white;
+
+      .search-bar {
+        display: flex;
+        justify-content: center; /* Centraliza o conjunto input + botão */
+        align-items: center;     /* Centraliza verticalmente */
+        gap: 0.5rem;             /* Aumentei um pouco o gap para visual */
+        padding: 0.75rem 0.5rem; /* Ajuste leve no padding */
+        border-bottom: 1px solid var(--border-color);
+        background: var(--background-color);
+
+        input {
+          /* Removemos o flex: 1 para o input não esticar tudo */
+          /* Definimos uma largura fixa ou máxima para parecer "centralizado" e não "justificado" */
+          width: 80%;
+          max-width: 250px;
+
+          padding: 0.4rem 0.6rem;
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-sm);
+          font-size: 0.875rem;
+          text-align: center; /* Opcional: texto centralizado dentro do input */
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            text-align: left; /* Ao digitar, volta para a esquerda para facilitar leitura */
+          }
+        }
+
+      }
+
+      .drive-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+
+        .breadcrumb {
           display: flex;
-          gap: 0.5rem;
-          justify-content: flex-start;
           align-items: center;
+          gap: 0.25rem;
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          overflow-x: auto;
+          white-space: nowrap;
 
-          .btn-sm {
-            padding: 0.4rem 0.6rem;
-            font-size: 1rem;
-
+          span {
+            cursor: pointer;
+            &:hover:not(.active) {
+              color: var(--primary-color);
+              text-decoration: underline;
+            }
             &.active {
-              background: var(--primary-color);
-              color: white;
-              border-color: var(--primary-color);
-              opacity: 1; /* Sobrescreve opacidade de disabled se necessário */
+              font-weight: 600;
+              color: var(--text-primary);
               cursor: default;
             }
-
-            &:disabled:not(.active) {
-              opacity: 0.5;
-              cursor: not-allowed;
-            }
           }
-          i {
-            font-size: 1.1rem;
+
+          .separator {
+            font-size: 0.6rem;
+            margin: 0 0.25rem;
+            color: var(--text-light);
           }
         }
       }
 
-      .drive-download-bar {
-        margin-bottom: 1rem;
+      .loading, .empty {
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+
+        i {
+          font-size: 2rem;
+          margin-bottom: 1rem;
+          color: var(--text-light);
+        }
+      }
+
+      .drive-listbox {
+        /* Garante que o componente ocupe o espaço, mas contenha o overflow */
+        width: 100%;
+        display: block;
+
+        ::ng-deep {
+          .p-listbox {
+            border: none;
+            border-radius: 0;
+            width: 100%;
+
+            /* 1. O Wrapper é quem ganha o Scroll */
+            .p-listbox-list-wrapper {
+              overflow: auto !important; /* Habilita scroll X e Y */
+              max-height: 400px;
+              width: 100%;
+            }
+
+            /* 2. A lista cresce conforme o conteúdo mais largo */
+            .p-listbox-list {
+              padding: 0;
+              display: flex !important;
+              flex-direction: column !important;
+              width: max-content !important;
+              min-width: 100%;
+            }
+
+            /* 3. Item da lista (Checkbox nativo + Conteúdo) */
+            .p-listbox-item {
+              padding: 0.75rem 1rem; /* Padding agora fica no item pai */
+              border-bottom: 1px solid var(--border-light);
+              width: 100%;
+              display: flex; /* Flex para alinhar checkbox e conteúdo */
+              align-items: center;
+              gap: 0.75rem; /* Espaço entre checkbox e texto */
+
+              &:last-child {
+                border-bottom: none;
+              }
+
+              /* Ajuste do Checkbox nativo do PrimeNG */
+              .p-checkbox {
+                display: inline-flex;
+                flex-shrink: 0;
+                margin-right: 0; /* Controlado pelo gap do pai */
+              }
+            }
+          }
+        }
+
+        /* Estilos do Template Interno (nosso conteúdo personalizado) */
+        .file-item-template {
+          display: flex;
+          align-items: center;
+          width: 100%; /* Ocupa o restante do espaço */
+
+          .file-item-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            white-space: nowrap;
+            flex-wrap: nowrap;
+
+            i {
+              color: var(--text-secondary);
+              width: 20px;
+              text-align: center;
+              flex-shrink: 0;
+            }
+
+            .file-name {
+              font-size: 0.875rem;
+              color: var(--text-primary);
+              white-space: nowrap;
+              display: inline-block;
+            }
+          }
+        }
+      }
+
+      .pagination-footer {
+        padding: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--background-color);
 
         .w-full {
           width: 100%;
         }
       }
-
-      .drive-files-container {
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        background: white;
-
-        .search-bar {
-          display: flex;
-          gap: 0.25rem;
-          padding: 0.5rem;
-          border-bottom: 1px solid var(--border-color);
-          background: var(--background-color);
-
-          input {
-            flex: 1;
-            padding: 0.4rem 0.6rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-
-            &:focus {
-              outline: none;
-              border-color: var(--primary-color);
-            }
-          }
-        }
-
-        .drive-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.5rem 1rem;
-          background: white;
-          border-bottom: 1px solid var(--border-color);
-
-          .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            overflow-x: auto;
-            white-space: nowrap;
-
-            span {
-              cursor: pointer;
-              &:hover:not(.active) {
-                color: var(--primary-color);
-                text-decoration: underline;
-              }
-              &.active {
-                font-weight: 600;
-                color: var(--text-primary);
-                cursor: default;
-              }
-            }
-
-            .separator {
-              font-size: 0.6rem;
-              margin: 0 0.25rem;
-              color: var(--text-light);
-            }
-          }
-        }
-
-        .loading, .empty {
-          padding: 2rem;
-          text-align: center;
-          color: var(--text-secondary);
-
-          i {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--text-light);
-          }
-        }
-
-        .drive-listbox {
-          /* Garante que o componente ocupe o espaço, mas contenha o overflow */
-          width: 100%;
-          display: block;
-
-          ::ng-deep {
-            .p-listbox {
-              border: none;
-              border-radius: 0;
-              width: 100%;
-
-              /* 1. O Wrapper é quem ganha o Scroll */
-              .p-listbox-list-wrapper {
-                overflow: auto !important; /* Habilita scroll X e Y */
-                max-height: 400px;
-                width: 100%;
-              }
-
-              /* 2. A lista cresce conforme o conteúdo mais largo */
-              .p-listbox-list {
-                padding: 0;
-                display: flex !important;
-                flex-direction: column !important;
-                width: max-content !important;
-                min-width: 100%;
-              }
-
-              /* 3. Item da lista (Checkbox nativo + Conteúdo) */
-              .p-listbox-item {
-                padding: 0.75rem 1rem; /* Padding agora fica no item pai */
-                border-bottom: 1px solid var(--border-light);
-                width: 100%;
-                display: flex; /* Flex para alinhar checkbox e conteúdo */
-                align-items: center;
-                gap: 0.75rem; /* Espaço entre checkbox e texto */
-
-                &:last-child {
-                  border-bottom: none;
-                }
-
-                /* Ajuste do Checkbox nativo do PrimeNG */
-                .p-checkbox {
-                  display: inline-flex;
-                  flex-shrink: 0;
-                  margin-right: 0; /* Controlado pelo gap do pai */
-                }
-              }
-            }
-          }
-
-          /* Estilos do Template Interno (nosso conteúdo personalizado) */
-          .file-item-template {
-            display: flex;
-            align-items: center;
-            width: 100%; /* Ocupa o restante do espaço */
-
-            .file-item-content {
-              display: flex;
-              align-items: center;
-              gap: 0.75rem;
-              white-space: nowrap;
-              flex-wrap: nowrap;
-
-              i {
-                color: var(--text-secondary);
-                width: 20px;
-                text-align: center;
-                flex-shrink: 0;
-              }
-
-              .file-name {
-                font-size: 0.875rem;
-                color: var(--text-primary);
-                white-space: nowrap;
-                display: inline-block;
-              }
-            }
-          }
-        }
-
-        .pagination-footer {
-          padding: 0.5rem;
-          border-top: 1px solid var(--border-color);
-          background: var(--background-color);
-
-          .w-full {
-            width: 100%;
-          }
-        }
-      }
     }
+
   }
 
   .recent-files {

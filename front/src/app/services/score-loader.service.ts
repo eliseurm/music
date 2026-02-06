@@ -35,13 +35,16 @@ export class ScoreLoaderService {
         if (OSMDModule.OpenSheetMusicDisplay) {
           (window as any).OpenSheetMusicDisplay = OSMDModule.OpenSheetMusicDisplay;
           console.log('OSMD carregado via módulo ES6');
-        } else if (OSMDModule.default && OSMDModule.default.OpenSheetMusicDisplay) {
+        }
+        else if (OSMDModule.default && OSMDModule.default.OpenSheetMusicDisplay) {
           (window as any).OpenSheetMusicDisplay = OSMDModule.default.OpenSheetMusicDisplay;
           console.log('OSMD carregado via default export');
-        } else if (typeof OSMDModule === 'function') {
+        }
+        else if (typeof OSMDModule === 'function') {
           (window as any).OpenSheetMusicDisplay = OSMDModule;
           console.log('OSMD carregado como função');
-        } else {
+        }
+        else {
           console.log('Estrutura do módulo OSMD:', OSMDModule);
           throw new Error('Não foi possível encontrar OpenSheetMusicDisplay no módulo');
         }

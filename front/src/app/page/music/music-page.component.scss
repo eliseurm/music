@@ -45,7 +45,7 @@
     flex: 1;
     overflow: hidden;
     background: transparent; /* Transparente para mostrar o gradiente */
-    padding: 1rem; /* Espaçamento para criar o efeito flutuante */
+    padding: 1rem 1rem 1rem 0; /* Espaçamento para criar o efeito flutuante */
     gap: 1rem;
 
     @media (max-width: 768px) {
@@ -113,7 +113,7 @@
 
       .osmd-container {
         width: 100%;
-        max-width: 900px;
+        max-width: 885px;
         min-height: 600px;
 
         /* Folha de papel branca sobre o fundo colorido */
@@ -126,7 +126,7 @@
         padding: 20px;
 
         /* Centralizar visualmente se for menor que a tela */
-        margin: auto 0;
+        margin: 0 0;
 
         @media (max-width: 768px) {
           min-height: 400px;

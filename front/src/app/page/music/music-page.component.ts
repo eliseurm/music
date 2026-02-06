@@ -377,24 +377,51 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.currentScoreId = score.id;
       this.fileName = score.name;
-      this.zoomLevel = score.settings.zoomLevel;
-      this.currentKey = score.settings.currentKey;
-      this.showPositions = score.settings.showPositions;
+
+      // Hierarquia de configurações: Individual -> Global -> Padrão
+      const globalSettings = await this.selectionService.getGlobalSettings();
+
+      // Zoom
+      this.zoomLevel = score.settings.zoomLevel ?? globalSettings.zoomLevel;
+
+      // Tonalidade
+      this.currentKey = score.settings.currentKey ||
+        (globalSettings.currentKey !== 'Padrão da partitura' ? globalSettings.currentKey : '');
+
+      // Mostrar Posições
+      this.showPositions = score.settings.showPositions ?? globalSettings.showPositions;
 
       await this.scoreLoader.loadXML(score.xmlContent, score.name);
 
       this.updateInstrumentsList();
 
-      // Aplicar visibilidade dos instrumentos salva
-      if (score.settings.instrumentVisibility) {
+      // Aplicar visibilidade dos instrumentos
+      if (score.settings.instrumentVisibility && Object.keys(score.settings.instrumentVisibility).length > 0) {
+        // Individual
         this.instruments.forEach(inst => {
           if (score.settings.instrumentVisibility[inst.id] !== undefined) {
             inst.visible = score.settings.instrumentVisibility[inst.id];
           }
         });
-        this.reapplyInstrumentVisibility();
+      } else if (globalSettings.instruments) {
+        // Global
+        const globalInstrumentNames = globalSettings.instruments.split(';').map(n => n.trim().toLowerCase());
+        const foundAny = this.instruments.some(inst => globalInstrumentNames.includes(inst.name.toLowerCase()));
+
+        if (foundAny) {
+          this.instruments.forEach(inst => {
+            inst.visible = globalInstrumentNames.includes(inst.name.toLowerCase());
+          });
+        } else {
+          // Se não encontrar nenhum da lista, traz todos selecionados
+          this.instruments.forEach(inst => inst.visible = true);
+        }
+      } else {
+        // Padrão (todos visíveis)
+        this.instruments.forEach(inst => inst.visible = true);
       }
 
+      this.reapplyInstrumentVisibility();
       this.applyZoom();
 
       if (this.showPositions) {
@@ -526,6 +553,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
         const exists = scores.some(s => s.id === this.currentScoreId);
         console.log('[MusicPage] Partitura já existe na lista?', exists);
 
+        // Ao salvar manualmente, as configurações passam a ser 'Individuais'
         if (exists) {
           console.log('[MusicPage] Chamando updateScoreSettings');
           await this.selectionService.updateScoreSettings(this.currentScoreId, {
@@ -549,7 +577,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           });
         }
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Seleção salva com sucesso!' });
+        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Configurações individuais salvas!' });
         if (this.fileExplorer) {
           this.fileExplorer.activePanel = 'selection';
         }
