@@ -99,11 +99,11 @@
     .score-area {
       flex: 1;
       overflow: auto;
-      padding: 0; /* O container interno já dará o espaçamento visual */
-      background: transparent;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      background: rgba(0, 0, 0, 0.05);
+      //align-items: flex-start;
+      padding: 10px; /* O container interno já dará o espaçamento visual */
 
       @media (max-width: 768px) {
         padding: 10px;
@@ -113,8 +113,8 @@
 
       .osmd-container {
         width: 100%;
-        max-width: 885px;
-        min-height: 600px;
+        max-width: 100%;
+        min-height: 100%;
 
         /* Folha de papel branca sobre o fundo colorido */
         background: white;
@@ -123,7 +123,7 @@
 
         overflow: auto;
         touch-action: pan-x pan-y;
-        padding: 20px;
+        padding: 10px;
 
         /* Centralizar visualmente se for menor que a tela */
         margin: 0 0;
@@ -135,8 +135,10 @@
         }
 
         svg {
+          width: calc(100% - 10px) !important;   /* Força a largura a ser 100% do container branco */
+          height: auto !important;  /* Ajusta a altura proporcionalmente */
           max-width: 100%;
-          height: auto;
+          display: block;
         }
       }
     }
@@ -274,7 +276,7 @@
 
   /* Gradiente nos botões flutuantes */
   background: var(--primary-gradient);
-  color: #fff;
+  color: #5a5a5a;
   border: none;
 
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
