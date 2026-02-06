@@ -16,6 +16,8 @@ export class ToolbarComponent {
   @Input() showPositions: boolean = true;
   @Input() instruments: { id: number, name: string, visible: boolean }[] = [];
   @Input() fileName: string = '';
+  @Input() annotationMode: 'none' | 'pencil' | 'highlighter' = 'none';
+  @Input() annotationColor: string = '#000000';
 
   @Output() zoomIn = new EventEmitter<void>();
   @Output() zoomOut = new EventEmitter<void>();
@@ -25,6 +27,9 @@ export class ToolbarComponent {
   @Output() saveSettings = new EventEmitter<void>();
   @Output() instrumentVisibilityChange = new EventEmitter<{ id: number, visible: boolean }>();
   @Output() toggleFullscreen = new EventEmitter<void>();
+  @Output() setAnnotationMode = new EventEmitter<'none' | 'pencil' | 'highlighter'>();
+  @Output() setAnnotationColor = new EventEmitter<string>();
+  @Output() clearAnnotations = new EventEmitter<void>();
 
   // Lista ordenada conforme sua solicitação (Ciclo das Quintas / Enarmonia)
   keys = [
@@ -63,5 +68,17 @@ export class ToolbarComponent {
 
   onSaveSettings(): void {
     this.saveSettings.emit();
+  }
+
+  setMode(mode: 'none' | 'pencil' | 'highlighter') {
+    this.setAnnotationMode.emit(mode);
+  }
+
+  setColor(color: string) {
+    this.setAnnotationColor.emit(color);
+  }
+
+  onClearAnnotations() {
+    this.clearAnnotations.emit();
   }
 }

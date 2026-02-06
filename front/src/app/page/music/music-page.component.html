@@ -14,6 +14,8 @@
     [showPositions]="showPositions"
     [instruments]="instruments"
     [fileName]="fileName"
+    [annotationMode]="annotationMode"
+    [annotationColor]="annotationColor"
     (zoomIn)="zoomIn()"
     (zoomOut)="zoomOut()"
     (toggleSidebar)="toggleSidebar()"
@@ -21,7 +23,10 @@
     (transposeToKey)="transposeToKey($event)"
     (saveSettings)="saveSettings()"
     (toggleFullscreen)="toggleFullscreen()"
-    (instrumentVisibilityChange)="onInstrumentVisibilityChange($event)">
+    (instrumentVisibilityChange)="onInstrumentVisibilityChange($event)"
+    (setAnnotationMode)="annotationMode = $event"
+    (setAnnotationColor)="annotationColor = $event"
+    (clearAnnotations)="clearAnnotations()">
   </app-toolbar>
 
   <div class="main-content">
@@ -38,7 +43,20 @@
     </app-file-explorer>
 
     <div class="score-area" [class.fullscreen]="isFullscreen">
-      <div #osmdContainer class="osmd-container">
+      <div class="score-relative-container" (window:resize)="onResize()">
+        <div #osmdContainer class="osmd-container"></div>
+        <canvas #annotationCanvas
+                class="annotation-canvas"
+                [class.drawing]="annotationMode !== 'none'"
+                (mousedown)="startDrawing($event)"
+                (mousemove)="draw($event)"
+                (mouseup)="stopDrawing()"
+                (mouseleave)="stopDrawing()"
+                (touchstart)="startDrawing($event)"
+                (touchmove)="draw($event)"
+                (touchend)="stopDrawing()">
+        </canvas>
+
         <div *ngIf="isLoading" class="state-message loading">
           <i class="fas fa-spinner fa-spin"></i>
           <p>Carregando visualizador de partituras...</p>
@@ -81,6 +99,39 @@
     <button class="float-btn" (click)="loadNextScore()" title="Próxima Partitura" *ngIf="selectedScores.length > 1">
       <i class="fas fa-chevron-right"></i>
     </button>
+
+    <!-- Novos controles de marcação -->
+    <div class="divider"></div>
+
+    <button class="float-btn"
+            [class.active]="annotationMode === 'pencil'"
+            (click)="setAnnotationModeFullscreen('pencil')"
+            title="Lápis">
+      <i class="fas fa-pencil-alt"></i>
+    </button>
+    <button class="float-btn"
+            [class.active]="annotationMode === 'highlighter'"
+            (click)="setAnnotationModeFullscreen('highlighter')"
+            title="Marca-texto">
+      <i class="fas fa-highlighter"></i>
+    </button>
+
+    <div class="color-picker-wrapper">
+      <input type="color"
+             [ngModel]="annotationColor"
+             (ngModelChange)="annotationColor = $event"
+             class="float-color-picker"
+             title="Cor da marcação">
+    </div>
+
+    <button class="float-btn"
+            (click)="clearAnnotations()"
+            title="Limpar marcações">
+      <i class="fas fa-eraser"></i>
+    </button>
+
+    <div class="divider"></div>
+
     <button class="float-btn" (click)="exitFullscreen()" title="Sair do modo tela cheia">
       <i class="fas fa-compress"></i>
     </button>

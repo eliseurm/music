@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {ToolbarComponent} from '../../components/toolbar/toolbar.component';
@@ -31,6 +31,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('osmdContainer') osmdContainer!: ElementRef;
   @ViewChild('appContainer') appContainer!: ElementRef;
+  @ViewChild('annotationCanvas') annotationCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild(FileExplorerComponent) fileExplorer!: FileExplorerComponent;
 
   private currentScoreId: string = '';
@@ -44,6 +45,13 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
   errorMessage: string = '';
   sidebarVisible: boolean = true; // Controle da sidebar
   instruments: { id: number, name: string, visible: boolean }[] = [];
+
+  // Marcações
+  annotationMode: 'none' | 'pencil' | 'highlighter' = 'none';
+  annotationColor: string = '#ff0000';
+  private isDrawing: boolean = false;
+  private currentPath: { x: number, y: number }[] = [];
+  private annotations: { mode: string, color: string, paths: { x: number, y: number }[][] }[] = [];
 
   // Tela cheia
   private prevSidebarVisible: boolean = true;
@@ -148,6 +156,8 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorMessage = '';
 
     try {
+      // Limpar marcações ao carregar nova partitura (se não for via loadSelectedScore)
+      this.clearAnnotations();
       const fileName = await this.driveService.getFolderName(fileId); // Nome do arquivo
       const xmlContent = await this.driveService.getFileContent(fileId);
       if (xmlContent) {
@@ -186,6 +196,10 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
   private applyZoom(): void {
     if (this.isOSMDReady) {
       this.scoreLoader.setZoom(this.zoomLevel);
+      // Tentativas múltiplas de sincronização para garantir que o canvas acompanhe a renderização progressiva do OSMD
+      setTimeout(() => this.syncCanvasSize(), 200);
+      setTimeout(() => this.syncCanvasSize(), 500);
+      setTimeout(() => this.syncCanvasSize(), 1000);
     }
   }
 
@@ -271,6 +285,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.isLoading = true;
     try {
+      this.clearAnnotations();
       const result = await this.scoreLoader.loadExampleScore();
       this.fileName = 'Exemplo Trombone';
 
@@ -309,6 +324,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.errorMessage = '';
 
     try {
+      this.clearAnnotations();
       const result = await this.scoreLoader.loadFile(file);
       this.fileName = file.name;
       this.currentScoreId = `local-${file.name}-${file.size}-${file.lastModified}`;
@@ -357,6 +373,11 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.isFullscreen = true;
     this.sidebarVisible = false;
+    this.annotationMode = 'none'; // Desativa marcação ao entrar em fullscreen se quiser seguir a regra de ser "apenas na maximizada" (embora o user possa querer que o que já estava continue)
+
+    // Sincronizar canvas após transição para fullscreen
+    setTimeout(() => this.syncCanvasSize(), 300);
+    setTimeout(() => this.syncCanvasSize(), 800);
 
     // ADICIONE ISTO: Garante que os controles apareçam assim que maximizar e sumam após 5s
     this.resetControlsTimer();
@@ -389,6 +410,11 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.isFullscreen = false;
     this.sidebarVisible = this.prevSidebarVisible;
+    this.annotationMode = 'none'; // Desativa ao sair
+
+    // Sincronizar canvas após transição de volta
+    setTimeout(() => this.syncCanvasSize(), 300);
+    setTimeout(() => this.syncCanvasSize(), 800);
   }
 
   async loadSelectedScore(score: SelectedScore): Promise<void> {
@@ -446,6 +472,13 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.reapplyInstrumentVisibility();
       this.applyZoom();
+
+      // Carregar marcações
+      this.annotations = score.settings.annotations ? JSON.parse(score.settings.annotations) : [];
+      setTimeout(() => {
+        this.syncCanvasSize();
+        this.redrawAnnotations();
+      }, 800);
 
       if (this.showPositions) {
         setTimeout(async () => {
@@ -583,7 +616,8 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
             zoomLevel: this.zoomLevel,
             currentKey: this.currentKey,
             showPositions: this.showPositions,
-            instrumentVisibility: instrumentVisibility
+            instrumentVisibility: instrumentVisibility,
+            annotations: JSON.stringify(this.annotations)
           }, xml);
         } else {
           console.log('[MusicPage] Chamando addScore');
@@ -596,7 +630,8 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
               zoomLevel: this.zoomLevel,
               currentKey: this.currentKey,
               showPositions: this.showPositions,
-              instrumentVisibility: instrumentVisibility
+              instrumentVisibility: instrumentVisibility,
+              annotations: JSON.stringify(this.annotations)
             }
           });
         }
@@ -617,6 +652,152 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
   updateInstrumentsList(): void {
     this.instruments = this.scoreLoader.getInstruments();
     console.log('[MusicPage] Lista de instrumentos atualizada:', this.instruments);
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.syncCanvasSize();
+  }
+
+  private syncCanvasSize(): void {
+    if (this.annotationCanvas) {
+      const canvas = this.annotationCanvas.nativeElement;
+      const container = canvas.parentElement; // score-relative-container
+
+      if (container) {
+        // Pegamos o tamanho total do conteúdo do container (scroll)
+        // O container pai deve ter o tamanho total se o osmd-container estiver expandindo ele
+        // Mas o osmd-container tem overflow: auto.
+        // Se quisermos que o canvas cubra a partitura inteira, ele deve ter o tamanho do conteúdo do osmd-container.
+
+        const osmdContainer = container.querySelector('.osmd-container');
+        if (osmdContainer) {
+          const width = osmdContainer.scrollWidth;
+          const height = osmdContainer.scrollHeight;
+
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+            this.redrawAnnotations();
+          }
+        }
+      }
+    }
+  }
+
+  startDrawing(event: MouseEvent | TouchEvent): void {
+    if (this.annotationMode === 'none') return;
+
+    this.isDrawing = true;
+    const pos = this.getEventPos(event);
+    this.currentPath = [pos];
+
+    // Começar um novo conjunto de paths para este modo/cor se necessário
+    let lastAnnotation = this.annotations[this.annotations.length - 1];
+    if (!lastAnnotation || lastAnnotation.mode !== this.annotationMode || lastAnnotation.color !== this.annotationColor) {
+      this.annotations.push({
+        mode: this.annotationMode,
+        color: this.annotationColor,
+        paths: [this.currentPath]
+      });
+    } else {
+      lastAnnotation.paths.push(this.currentPath);
+    }
+  }
+
+  draw(event: MouseEvent | TouchEvent): void {
+    if (!this.isDrawing) return;
+
+    const pos = this.getEventPos(event);
+    this.currentPath.push(pos);
+    this.redrawAnnotations();
+  }
+
+  setAnnotationModeFullscreen(mode: 'none' | 'pencil' | 'highlighter'): void {
+    this.annotationMode = mode;
+    this.resetControlsTimer();
+  }
+
+  stopDrawing(): void {
+    if (this.isDrawing) {
+      this.isDrawing = false;
+      // Ao parar de desenhar em fullscreen, reinicia o timer se não estiver com uma ferramenta ativa
+      if (this.isFullscreen && this.annotationMode === 'none') {
+        this.resetControlsTimer();
+      }
+    }
+  }
+
+  private getEventPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
+    const canvas = this.annotationCanvas.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+
+    let clientX, clientY;
+    if (event instanceof MouseEvent) {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    } else {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    }
+
+    // Coordenadas relativas ao canvas (0 a 1)
+    let x = (clientX - rect.left) / canvas.width;
+    let y = (clientY - rect.top) / canvas.height;
+
+    return { x, y };
+  }
+
+  private redrawAnnotations(): void {
+    const canvas = this.annotationCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    this.annotations.forEach(ann => {
+      ctx.beginPath();
+      ctx.strokeStyle = ann.color;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      if (ann.mode === 'highlighter') {
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 20;
+      } else {
+        ctx.globalAlpha = 1.0;
+        ctx.lineWidth = 3;
+      }
+
+      ann.paths.forEach(path => {
+        if (path.length < 1) return;
+
+        // Converter coordenadas normalizadas de volta para pixels baseadas no tamanho atual do canvas
+        const getX = (p: {x: number, y: number}) => p.x * canvas.width;
+        const getY = (p: {x: number, y: number}) => p.y * canvas.height;
+
+        if (path.length === 1) {
+          const px = getX(path[0]);
+          const py = getY(path[0]);
+          ctx.moveTo(px, py);
+          ctx.arc(px, py, ctx.lineWidth / 2, 0, Math.PI * 2);
+        } else {
+          ctx.moveTo(getX(path[0]), getY(path[0]));
+          for (let i = 1; i < path.length; i++) {
+            ctx.lineTo(getX(path[i]), getY(path[i]));
+          }
+        }
+      });
+      ctx.stroke();
+    });
+
+    // Reset alpha for future drawings
+    ctx.globalAlpha = 1.0;
+  }
+
+  clearAnnotations(): void {
+    this.annotations = [];
+    this.redrawAnnotations();
   }
 
   onInstrumentVisibilityChange(event: { id: number, visible: boolean }): void {

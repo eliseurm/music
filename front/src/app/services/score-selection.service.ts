@@ -7,6 +7,7 @@ export interface GlobalSettings {
   instruments: string;
   showPositions: boolean;
   zoomLevel: number;
+  annotations?: string; // JSON string das marcações
 }
 
 export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
@@ -27,6 +28,7 @@ export interface SelectedScore {
     currentKey: string;
     showPositions: boolean;
     instrumentVisibility: { [key: string]: boolean };
+    annotations?: string; // JSON string das marcações para esta partitura
   };
 }
 
