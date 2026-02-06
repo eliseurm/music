@@ -1,6 +1,12 @@
-<div #appContainer class="app-container" [class.fullscreen]="isFullscreen">
+<div #appContainer class="app-container"
+     [class.fullscreen]="isFullscreen"
+     (mousemove)="resetControlsTimer()"
+     (click)="resetControlsTimer()"
+     (touchstart)="resetControlsTimer()">
+
   <p-toast position="top-right"></p-toast>
   <p-confirmDialog></p-confirmDialog>
+
   <app-toolbar
     [class.hidden]="isFullscreen"
     [zoomLevel]="zoomLevel"
@@ -52,11 +58,17 @@
           <p>Inicializando visualizador de partituras...</p>
         </div>
 
+        <div class="floating-controls"
+             *ngIf="isFullscreen"
+             [class.hidden-controls]="!showFloatingControls">
+          <button class="float-btn" (click)="loadPreviousScore()">...</button>
+        </div>
+
       </div>
     </div>
   </div>
 
-  <div class="floating-controls" *ngIf="isFullscreen">
+  <div class="floating-controls" *ngIf="isFullscreen" [class.hidden-controls]="!showFloatingControls">
     <button class="float-btn" (click)="loadPreviousScore()" title="Partitura Anterior" *ngIf="selectedScores.length > 1">
       <i class="fas fa-chevron-left"></i>
     </button>

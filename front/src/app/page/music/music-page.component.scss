@@ -254,8 +254,8 @@
 /* Controles Flutuantes (Estilo atualizado) */
 .app-container .floating-controls {
   position: fixed;
-  bottom: 30px; /* Mudei para baixo, estilo app mobile moderno, ou manter top se preferir */
-  right: 30px;
+  top: 30px;
+  left: 30px; /* Mudado de right para left */
   display: flex;
   gap: 15px;
   z-index: 1100;
@@ -264,6 +264,18 @@
   padding: 10px;
   border-radius: 50px;
   border: 1px solid rgba(255, 255, 255, 0.3);
+
+  /* Transição suave para sumir */
+  transition: opacity 0.5s ease, visibility 0.5s;
+  opacity: 1;
+  visibility: visible;
+
+  /* Classe que usaremos para esconder */
+  &.hidden-controls {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; /* Impede cliques enquanto estiver invisível */
+  }
 }
 
 .app-container .floating-controls .float-btn {

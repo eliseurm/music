@@ -46,8 +46,10 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
   instruments: { id: number, name: string, visible: boolean }[] = [];
 
   // Tela cheia
-  isFullscreen: boolean = false;
   private prevSidebarVisible: boolean = true;
+  private controlsTimer: any;
+  isFullscreen: boolean = false;
+  showFloatingControls: boolean = true;
 
   // Lista de partituras selecionadas (para navegação)
   selectedScores: SelectedScore[] = [];
@@ -70,6 +72,7 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSettings();
     this.setupFullscreenListener();
     this.subscribeToScores();
+    this.resetControlsTimer();
   }
 
   private subscribeToScores(): void {
@@ -354,7 +357,27 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.isFullscreen = true;
     this.sidebarVisible = false;
+
+    // ADICIONE ISTO: Garante que os controles apareçam assim que maximizar e sumam após 5s
+    this.resetControlsTimer();
   }
+
+  // O seu método resetControlsTimer já está correto, mas certifique-se que está assim:
+  resetControlsTimer() {
+    // Se não estiver em fullscreen, não faz nada (opcional, mas economiza processamento)
+    if (!this.isFullscreen) return;
+
+    this.showFloatingControls = true; // Mostra imediatamente
+
+    if (this.controlsTimer) {
+      clearTimeout(this.controlsTimer);
+    }
+
+    this.controlsTimer = setTimeout(() => {
+      this.showFloatingControls = false; // Esconde após 5s
+    }, 2000);
+  }
+
 
   exitFullscreen(): void {
     if (document.exitFullscreen) {
@@ -608,4 +631,5 @@ export class MusicPageComponent implements OnInit, AfterViewInit, OnDestroy {
       }, 300);
     }
   }
+
 }
