@@ -282,59 +282,84 @@
 }
 
 /* Controles Flutuantes (Estilo atualizado) */
-  .app-container .floating-controls {
+/* ... (Mantenha o código anterior até chegar em .floating-controls) ... */
+
+/* Controles Flutuantes (Estilo atualizado e Responsivo) */
+/* Controles Flutuantes - Topo e Responsivo em 2 linhas */
+.app-container .floating-controls {
   position: fixed;
   top: 30px;
-  left: 30px; /* Mudado de right para left */
-  display: flex;
-  align-items: center; /* Alinha itens no centro */
-  gap: 15px;
-  z-index: 1100;
-  background: rgba(255, 255, 255, 0.4); /* Levemente mais opaco para visibilidade */
-  backdrop-filter: blur(8px);
-  padding: 10px 20px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  left: 50%; /* Centraliza horizontalmente */
+  transform: translateX(-50%); /* Ajuste fino da centralização */
 
-  /* Transição suave para sumir */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap; /* PERMITE QUEBRA DE LINHA */
+  gap: 15px;
+
+  z-index: 1100;
+  background: rgba(255, 255, 255, 0.55); /* Um pouco mais opaco para leitura */
+  backdrop-filter: blur(10px);
+  padding: 10px 25px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
   transition: opacity 0.5s ease, visibility 0.5s;
   opacity: 1;
   visibility: visible;
 
-  /* Classe que usaremos para esconder */
   &.hidden-controls {
     opacity: 0;
     visibility: hidden;
-    pointer-events: none; /* Impede cliques enquanto estiver invisível */
+    pointer-events: none;
   }
 
+  /* Divisor vertical (linha) */
   .divider {
     width: 1px;
     height: 30px;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.2);
     margin: 0 5px;
+  }
+
+  /* --- RESPONSIVIDADE (MOBILE) --- */
+  @media (max-width: 768px) {
+    top: 15px; /* Margem superior um pouco menor no mobile */
+    width: 95%; /* Ocupa quase toda a largura */
+    max-width: 360px; /* Força a quebra de linha ao limitar a largura */
+
+    border-radius: 20px; /* Bordas menos arredondadas pois virou um bloco maior */
+    padding: 10px;
+    gap: 8px; /* Espaço menor entre botões */
+
+    /* Esconde os divisores no mobile para economizar espaço e limpar o visual */
+    .divider {
+      display: none;
+    }
   }
 }
 
+/* Estilo dos Botões */
 .app-container .floating-controls .float-btn {
-  width: 50px;
-  height: 50px;
+  width: 45px; /* Tamanho padrão levemente reduzido para desktop */
+  height: 45px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
 
-  /* Gradiente nos botões flutuantes */
   background: var(--primary-gradient);
-  color: #5a5a5a; /* A cor aqui nao deve ser branca, deve ser esta ai, favor nao mudar novamente. */
+  color: #5a5a5a;
   border: none;
-
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s;
 
   i {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   &:hover {
@@ -346,11 +371,23 @@
   }
 
   &.active {
-    background: #f5576c; /* Cor de destaque quando ativo */
-    box-shadow: 0 0 15px rgba(245, 87, 108, 0.5);
+    background: #f5576c;
+    color: white; /* Melhor contraste quando ativo */
+    box-shadow: 0 0 15px rgba(245, 87, 108, 0.6);
+  }
+
+  /* Ajuste Botões Mobile */
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+
+    i {
+      font-size: 1rem;
+    }
   }
 }
 
+/* Color Picker */
 .color-picker-wrapper {
   width: 40px;
   height: 40px;
@@ -361,6 +398,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 
   .float-color-picker {
     width: 150%;
@@ -369,11 +407,10 @@
     padding: 0;
     cursor: pointer;
     background: none;
-    &::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-    &::-webkit-color-swatch {
-      border: none;
-    }
+  }
+
+  @media (max-width: 768px) {
+    width: 35px;
+    height: 35px;
   }
 }

@@ -105,13 +105,14 @@
 
     <button class="float-btn"
             [class.active]="annotationMode === 'pencil'"
-            (click)="setAnnotationModeFullscreen('pencil')"
+            (click)="setAnnotationModeFullscreen(annotationMode === 'pencil' ? 'none' : 'pencil')"
             title="Lápis">
       <i class="fas fa-pencil-alt"></i>
     </button>
+
     <button class="float-btn"
             [class.active]="annotationMode === 'highlighter'"
-            (click)="setAnnotationModeFullscreen('highlighter')"
+            (click)="setAnnotationModeFullscreen(annotationMode === 'highlighter' ? 'none' : 'highlighter')"
             title="Marca-texto">
       <i class="fas fa-highlighter"></i>
     </button>
